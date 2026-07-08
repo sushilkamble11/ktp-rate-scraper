@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-07-07 (manual seed — single date only, not a full run)",
+  "ktp_rates": {
+    "unpowered": null,
+    "powered": null,
+    "2br_chalet": null,
+    "2br_upgraded": null,
+    "3br_chalet": null,
+    "cedar": null
+  },
+  "mapping": {
+    "nrma_jindabyne": {
+      "url": "https://www.nrmaparksandresorts.com.au/jindabyne/book-now/",
+      "categories": {
+        "unpowered": ["Unpowered Sites"],
+        "powered": ["Powered Sites - Pet Friendly"],
+        "2br_chalet": ["Lake View Villa - Access"],
+        "2br_upgraded": ["Lake View Villa"],
+        "3br_chalet": [],
+        "cedar": []
+      }
+    },
+    "discovery_jindabyne": {
+      "url": "https://www.discoveryholidayparks.com.au/caravan-parks/new-south-wales/snowy-mountains/jindabyne",
+      "categories": {
+        "unpowered": ["Unpowered Site - Tent", "Unpowered Site - Campervan"],
+        "powered": ["Powered Grass Site - Tent", "Powered Sites - 17 Foot", "Powered Slab Site - 21 Foot", "Powered Paved Site - 25 Foot", "Deluxe Powered Site - 25 Foot"],
+        "2br_chalet": ["Standard 2 Bedroom Cabin"],
+        "2br_upgraded": ["Superior 2 Bedroom Cabin", "Superior 2 Bedroom Spa Cabin - Sleeps 5", "Superior 2 Bedroom Spa Cabin - Sleeps 6", "Superior 2 Bedroom Cabin - Fireplace"],
+        "3br_chalet": ["Deluxe 2 Bedroom Cabin - Fireplace"],
+        "cedar": []
+      }
+    }
+  },
+  "records": [
+    {"competitor": "discovery_jindabyne", "category": "Deluxe Cabin", "name": "Deluxe 2 Bedroom Cabin - Fireplace", "sleeps": 6, "price": 978, "price_member": 928, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Deluxe Cabin", "name": "Deluxe 2 Bedroom Cabin - Sleeps 6", "sleeps": 6, "price": 958, "price_member": 908, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Deluxe Cabin", "name": "Deluxe 2 Bedroom Cabin - Sleeps 5", "sleeps": 5, "price": 958, "price_member": 908, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Superior Cabin", "name": "Superior 2 Bedroom Cabin - Fireplace", "sleeps": 4, "price": 951, "price_member": 901, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Superior Cabin", "name": "Superior 2 Bedroom Cabin", "sleeps": 6, "price": 911, "price_member": 861, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Superior Cabin", "name": "Superior 2 Bedroom Spa Cabin - Sleeps 5", "sleeps": 5, "price": 911, "price_member": 861, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Standard Cabin", "name": "Standard 2 Bedroom Cabin", "sleeps": 4, "price": 400, "price_member": 360, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Standard Cabin", "name": "Standard 1 Bedroom Cabin", "sleeps": 4, "price": 390, "price_member": 351, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Standard Cabin", "name": "Standard Cabin", "sleeps": 4, "price": 380, "price_member": 342, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Standard Cabin", "name": "Standard Studio Cabin", "sleeps": 4, "price": 370, "price_member": 333, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Powered Site", "name": "Deluxe Powered Site - 25 Foot", "sleeps": 6, "price": 205, "price_member": 185, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Economy Cabin", "name": "Economy Cabin (No Bathroom & Kitchen)", "sleeps": 4, "price": 202, "price_member": 182, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Powered Site", "name": "Powered Paved Site - 25 Foot", "sleeps": 6, "price": 200, "price_member": 180, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Powered Site", "name": "Powered Slab Site - 21 Foot", "sleeps": 6, "price": 200, "price_member": 180, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Powered Site", "name": "Powered Sites - 17 Foot", "sleeps": 6, "price": 200, "price_member": 180, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Powered Site", "name": "Powered Grass Site - Tent", "sleeps": 6, "price": 195, "price_member": 176, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Unpowered Site", "name": "Unpowered Site - Tent", "sleeps": 6, "price": 190, "price_member": 171, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Unpowered Site", "name": "Unpowered Site - Campervan", "sleeps": 6, "price": 190, "price_member": 171, "available": true, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Economy Cabin", "name": "Economy Studio Cabin (No Bathroom)", "sleeps": 4, "price": 238, "price_member": 215, "available": false, "scrape_date": "2026-07-07"},
+    {"competitor": "discovery_jindabyne", "category": "Superior Cabin", "name": "Superior 2 Bedroom Spa Cabin - Sleeps 6", "sleeps": 6, "price": 929, "price_member": 879, "available": false, "scrape_date": "2026-07-07"},
+
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Unpowered Sites", "sleeps": 6, "bedrooms": null, "price": 89, "price_member": 81, "available": true, "rate_is_approximate": false, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Powered Sites - Pet Friendly", "sleeps": 6, "bedrooms": null, "price": 149, "price_member": 135, "available": true, "rate_is_approximate": false, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Cabin - No Ensuite", "sleeps": 5, "bedrooms": 1, "price": 300, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Studio", "sleeps": 2, "bedrooms": null, "price": 344, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Studio - With Storage", "sleeps": 2, "bedrooms": null, "price": 365, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Kosi Cabin", "sleeps": 4, "bedrooms": 1, "price": 498, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Snow Gum Cabin", "sleeps": 5, "bedrooms": 1, "price": 509, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Snow Gum Cabin - Pet Friendly", "sleeps": 5, "bedrooms": 1, "price": 509, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Tiny Home", "sleeps": 4, "bedrooms": 1, "price": 578, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Lake View Villa - Access", "sleeps": 4, "bedrooms": 2, "price": 588, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Glamtainer", "sleeps": 4, "bedrooms": null, "price": 661, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"},
+    {"competitor": "nrma_jindabyne", "category": null, "name": "Lake View Villa", "sleeps": 6, "bedrooms": 2, "price": 620, "price_member": null, "available": true, "rate_is_approximate": true, "scrape_date": "2026-07-07"}
+  ],
+  "errors": []
+}

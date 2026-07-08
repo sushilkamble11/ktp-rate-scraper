@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>KTP Rate Watch — Jindabyne Competitor Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #101c26;
+    --slope: #1c3144;
+    --ice: #6fc3d6;
+    --ice-dim: #cfeaf0;
+    --snow: #f7fafb;
+    --alert: #d1495b;
+    --good: #2f9e6e;
+    --line: #dbe6ea;
+    --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: var(--snow);
+    color: var(--ink);
+  }
+  header {
+    background: linear-gradient(180deg, var(--slope) 0%, var(--ink) 100%);
+    color: white;
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: "";
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, var(--ice) 0%, transparent 70%);
+    opacity: 0.25;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ice-dim);
+    margin-bottom: 0.4rem;
+  }
+  header .meta {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    color: #b8ccd6;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+  }
+  .card .label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b8290;
+  }
+  .card .ktp-rate {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0.3rem 0 0.6rem;
+  }
+  .card .ktp-rate.unset { color: #a3b3ba; font-size: 1rem; font-weight: 500; }
+  .comp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 0.15rem 0;
+    border-top: 1px dashed var(--line);
+  }
+  .comp-row:first-of-type { border-top: none; padding-top: 0.3rem; }
+  .delta { font-family: var(--mono); font-weight: 600; }
+  .delta.under { color: var(--alert); }
+  .delta.over { color: var(--good); }
+
+  .section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 2rem 0 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+  select {
+    font-family: var(--sans);
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: white;
+  }
+  .chart-wrap {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    height: 320px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 0.5rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b8290;
+    background: #fafcfd;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #6b8290;
+  }
+  .empty-state code {
+    background: #eef3f5;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-family: var(--mono);
+  }
+  footer {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1rem 2rem 3rem;
+    font-size: 0.75rem;
+    color: #8a9aa3;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Kosciuszko Tourist Park</div>
+  <h1>Rate Watch — Jindabyne</h1>
+  <div class="meta" id="meta">Loading…</div>
+</header>
+
+<main id="main">
+  <div class="empty-state" id="empty" style="display:none">
+    Couldn't load <code>history/latest.json</code>.<br>
+    Run <code>python run_scraper.py</code> first, and serve this folder with
+    <code>python3 -m http.server 8000</code> rather than opening the file directly.
+  </div>
+
+  <div id="content" style="display:none">
+    <div class="cards" id="cards"></div>
+
+    <div class="section-title">
+      Rate over time
+      <select id="categorySelect"></select>
+    </div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+
+    <div class="section-title">Snapshot table — next 14 days</div>
+    <table id="table">
+      <thead><tr id="tableHead"></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  Rates shown are non-member / standard published rates scraped from each
+  competitor's own booking page. NRMA cabin rates for stays under their
+  2-night minimum are shown as their published "from" rate across a wider
+  window, not a locked single-night figure — treat those as directional.
+</footer>
+
+<script>
+const CATEGORY_LABELS = {
+  unpowered: "Unpowered Site",
+  powered: "Powered Site",
+  "2br_chalet": "2BR Chalet",
+  "2br_upgraded": "2BR Upgraded",
+  "3br_chalet": "3BR Chalet (no true competitor match — soft proxy)",
+  cedar: "Cedar Cabin (mapping not yet configured)",
+};
+
+const COMPETITOR_LABELS = {
+  nrma_jindabyne: "NRMA Jindabyne",
+  discovery_jindabyne: "Discovery Parks Jindabyne",
+};
+
+let chart;
+
+function median(arr) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+}
+
+function buildCategoryIndex(data) {
+  // category -> competitor -> date -> [prices]
+  const idx = {};
+  for (const cat of Object.keys(CATEGORY_LABELS)) idx[cat] = {};
+
+  for (const rec of data.records) {
+    const compMap = data.mapping[rec.competitor];
+    if (!compMap) continue;
+    for (const [cat, names] of Object.entries(compMap.categories)) {
+      if (names.includes(rec.name)) {
+        idx[cat][rec.competitor] = idx[cat][rec.competitor] || {};
+        idx[cat][rec.competitor][rec.scrape_date] = idx[cat][rec.competitor][rec.scrape_date] || [];
+        idx[cat][rec.competitor][rec.scrape_date].push(rec.price);
+      }
+    }
+  }
+  return idx;
+}
+
+function renderCards(data, idx) {
+  const cardsEl = document.getElementById("cards");
+  cardsEl.innerHTML = "";
+
+  for (const [cat, label] of Object.entries(CATEGORY_LABELS)) {
+    const ktpRate = data.ktp_rates[cat];
+    const card = document.createElement("div");
+    card.className = "card";
+
+    let rowsHtml = "";
+    for (const comp of Object.keys(COMPETITOR_LABELS)) {
+      const byDate = idx[cat][comp] || {};
+      const allPrices = Object.values(byDate).flat();
+      if (!allPrices.length) {
+        rowsHtml += `<div class="comp-row"><span>${COMPETITOR_LABELS[comp]}</span><span>—</span></div>`;
+        continue;
+      }
+      const med = median(allPrices);
+      let deltaHtml = "";
+      if (ktpRate) {
+        const diff = med - ktpRate;
+        const cls = diff >= 0 ? "over" : "under";
+        const sign = diff >= 0 ? "+" : "";
+        deltaHtml = ` <span class="delta ${cls}">(${sign}${diff})</span>`;
+      }
+      rowsHtml += `<div class="comp-row"><span>${COMPETITOR_LABELS[comp]}</span><span>$${med}${deltaHtml}</span></div>`;
+    }
+
+    card.innerHTML = `
+      <div class="label">${label}</div>
+      <div class="ktp-rate ${ktpRate ? "" : "unset"}">${ktpRate ? "$" + ktpRate : "Set in config.py"}</div>
+      ${rowsHtml}
+    `;
+    cardsEl.appendChild(card);
+  }
+}
+
+function renderChart(idx, category) {
+  const ctx = document.getElementById("chart");
+  const datasets = [];
+  const colors = { nrma_jindabyne: "#6fc3d6", discovery_jindabyne: "#d1495b" };
+
+  for (const comp of Object.keys(COMPETITOR_LABELS)) {
+    const byDate = idx[category][comp] || {};
+    const points = Object.entries(byDate)
+      .map(([d, prices]) => ({ x: d, y: median(prices) }))
+      .sort((a, b) => a.x.localeCompare(b.x));
+    if (points.length) {
+      datasets.push({
+        label: COMPETITOR_LABELS[comp],
+        data: points,
+        borderColor: colors[comp],
+        backgroundColor: colors[comp],
+        tension: 0.25,
+        pointRadius: 2,
+      });
+    }
+  }
+
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { type: "category" },
+        y: { beginAtZero: false, ticks: { callback: (v) => "$" + v } },
+      },
+      plugins: { legend: { position: "top" } },
+    },
+  });
+}
+
+function renderTable(data, idx, category) {
+  const dates = [...new Set(data.records.map(r => r.scrape_date))].sort().slice(0, 14);
+  const head = document.getElementById("tableHead");
+  const body = document.getElementById("tableBody");
+
+  head.innerHTML = "<th>Date</th>" + Object.values(COMPETITOR_LABELS).map(l => `<th>${l}</th>`).join("");
+  body.innerHTML = dates.map(d => {
+    const cells = Object.keys(COMPETITOR_LABELS).map(comp => {
+      const prices = (idx[category][comp] || {})[d];
+      return `<td>${prices ? "$" + median(prices) : "—"}</td>`;
+    }).join("");
+    return `<tr><td>${d}</td>${cells}</tr>`;
+  }).join("");
+}
+
+async function init() {
+  let data;
+  try {
+    const res = await fetch("history/latest.json");
+    if (!res.ok) throw new Error();
+    data = await res.json();
+  } catch {
+    document.getElementById("empty").style.display = "block";
+    return;
+  }
+
+  document.getElementById("content").style.display = "block";
+  document.getElementById("meta").textContent =
+    `Last updated ${data.generated_at} — ${data.records.length} rate points collected` +
+    (data.errors.length ? ` — ${data.errors.length} scrape errors` : "");
+
+  const idx = buildCategoryIndex(data);
+  renderCards(data, idx);
+
+  const select = document.getElementById("categorySelect");
+  select.innerHTML = Object.entries(CATEGORY_LABELS)
+    .map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+  select.addEventListener("change", () => {
+    renderChart(idx, select.value);
+    renderTable(data, idx, select.value);
+  });
+
+  renderChart(idx, select.value);
+  renderTable(data, idx, select.value);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "ktp_categories": {
+    "unpowered": "Unpowered Site",
+    "powered": "Powered Site (Caravan/Camper Trailer/Motorhome/Overflow combined)",
+    "2br_chalet": "2BR Chalet",
+    "2br_upgraded": "2BR Upgraded Chalet",
+    "3br_chalet": "3BR Chalet",
+    "cedar": "Cedar Cabin"
+  },
+
+  "_comment_3br_and_cedar": "3br_chalet and cedar are soft/unconfirmed mappings below. See README.md.",
+
+  "nrma_jindabyne": {
+    "url": "https://www.nrmaparksandresorts.com.au/jindabyne/book-now/",
+    "categories": {
+      "unpowered": ["Unpowered Sites"],
+      "powered": ["Powered Sites - Pet Friendly"],
+      "2br_chalet": ["Lake View Villa - Access"],
+      "2br_upgraded": ["Lake View Villa"],
+      "3br_chalet": [],
+      "cedar": []
+    }
+  },
+
+  "discovery_jindabyne": {
+    "url": "https://www.discoveryholidayparks.com.au/caravan-parks/new-south-wales/snowy-mountains/jindabyne",
+    "categories": {
+      "unpowered": ["Unpowered Site - Tent", "Unpowered Site - Campervan"],
+      "powered": [
+        "Powered Grass Site - Tent",
+        "Powered Sites - 17 Foot",
+        "Powered Slab Site - 21 Foot",
+        "Powered Paved Site - 25 Foot",
+        "Deluxe Powered Site - 25 Foot"
+      ],
+      "2br_chalet": ["Standard 2 Bedroom Cabin"],
+      "2br_upgraded": [
+        "Superior 2 Bedroom Cabin",
+        "Superior 2 Bedroom Spa Cabin - Sleeps 5",
+        "Superior 2 Bedroom Spa Cabin - Sleeps 6",
+        "Superior 2 Bedroom Cabin - Fireplace"
+      ],
+      "3br_chalet": ["Deluxe 2 Bedroom Cabin - Fireplace"],
+      "cedar": []
+    }
+  }
+}
