@@ -1,5 +1,0 @@
-{"result":[
- {"date":"2026-10-19T00:00:00.000Z","lengthOfStay":1,"price":199,"canCheckIn":true,"totalAvailability":5,"checkOutConstraint":{"minStay":1,"closeToDeparture":false}},
- {"date":"2026-10-23T00:00:00.000Z","lengthOfStay":1,"price":199,"canCheckIn":true,"totalAvailability":3,"checkOutConstraint":{"minStay":1,"closeToDeparture":false}},
- {"date":"2026-12-18T00:00:00.000Z","lengthOfStay":1,"price":0,"canCheckIn":true,"totalAvailability":0,"availabilityConstraint":"min-stay-constraint","constraintStayDays":2,"checkOutConstraint":{"closeToDeparture":false,"minStay":2}}
-]}
