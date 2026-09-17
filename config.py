@@ -44,6 +44,8 @@ NRMA_BASE = "https://www.nrmaparksandresorts.com.au"
 NRMA_PAGE = "https://www.nrmaparksandresorts.com.au/jindabyne/book-now/"
 NRMA_PARK_NAME = "NRMA Jindabyne Holiday Park"
 NRMA_API_KEY = "instances_efa54796e4116207d567ad259e53a819"  # public key their site sends
+NRMA_MEMBER_PCT = 10                               # My NRMA: 10% off ...
+NRMA_MEMBER_CAP = 60                               # ... capped at $60 a booking
 NRMA_RANGE_DAYS = 31                               # calendar chunk size (max ~91)
 
 # --- Output ----------------------------------------------------------------------

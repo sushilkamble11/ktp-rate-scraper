@@ -393,7 +393,7 @@ $("#mapping").innerHTML = `<thead><tr><th>Your category</th>${COMPS.map(k => `<t
     return `<td>${esc(m.name || "–")} <span class="tag ${m.match === "exact" ? "" : "close"}">${m.match === "none" ? "no equivalent" : m.match}</span><div class="small muted">${esc(m.note || "")}</div></td>`; }).join("") + `</tr>`).join("") + `</tbody>`;
 $("#how").innerHTML = `<p style="margin-top:0"><b>Rates.</b> Nightly rate for 2 adults. You: ${esc(D.ktpBasis.toLowerCase())}. ${COMPS.map(k => `${esc(D.comps[k].short)}: ${esc(D.comps[k].price_basis)}`).join(". ")}.</p>
   <p><b>Market</b> is the average of the competitor rooms marked exact or close for that category. Categories with no equivalent are shown for reference and never flagged.</p>
-  <p><b>Flags.</b> Raise: ${D.cfg.raise}%+ under market, or ${D.cfg.band}%+ under while a competitor is sold out. Lower: ${D.cfg.lower}%+ over market and no competitor sold out. Min-stay nights are priced as a share of the minimum stay.</p>
+  <p><b>Flags.</b> Raise: ${D.cfg.raise}%+ under market, or ${D.cfg.band}%+ under while a competitor is sold out. Lower: ${D.cfg.lower}%+ over market and no competitor sold out. Min-stay nights are priced as a share of the minimum stay (Discovery's calendar doesn't show its minimum-stay rules).</p>
   <p style="margin-bottom:0"><b>Not open</b> means that park hasn't loaded or released rates for the night yet. Rates are checked out to the end of 2028 every week and appear here as parks load them.</p>`;
 $("#foot").textContent = `Generated ${D.run.generated || D.run.nice}` + (D.run.note ? ` · ${D.run.note}` : "") + ` · nightly rates: ${Object.entries(D.counts).map(([k, v]) => shortName(k) + " " + v).join(", ")}`;
 </script>

@@ -6,7 +6,7 @@ Every Monday morning this reads the nightly rates of **Kosciuszko Tourist Park**
 competitor room, and tells you where to move your rates.
 
 - **Rates compared:** KTP's public direct rate vs each competitor's **member** rate
-  (Discovery Club 10% off, capped at $50 a booking; My NRMA 10% off the flexible rate).
+  (Discovery Club 10% off, capped at $50 a booking; My NRMA 10% off the flexible rate, capped at $60 a booking).
   Nightly, 2 adults. Min-stay nights are priced as a share of the minimum stay.
 - **Market** = average of the competitor rooms marked `exact` or `close` in `mapping.json`.
 - **Flags:** *Raise* when you're the cheapest and 10%+ under the market (or 5%+ under
@@ -83,4 +83,4 @@ python -m pytest -q tests                   # offline tests
 |---|---|
 | KTP | SiteMinder booking engine (`book-directonline.com`, channel `kosciuszkotouristpark-1`): 90-day nightly calendars; single-date queries for min-stay nights and extra guests |
 | Discovery | G'day Group API (`exp-api.gdaygroup.com.au`, park `NJIN`): one call returns every room's 12-month nightly calendar; extras from the itemised rate breakdown |
-| NRMA | NRMA site API (`/api/accommodation/get-availability-pricing/`): monthly ranges, Standard Rate per night and member total; nights after the last bookable night are "rates loaded, not bookable yet"; $9,999 block-outs are ignored |
+| NRMA | NRMA site API (`/api/accommodation/get-availability-pricing/`): monthly ranges, Standard Rate per night (member = 10% off, max $60); nights after the last bookable night are "rates loaded, not bookable yet"; $9,999 block-outs are ignored |
