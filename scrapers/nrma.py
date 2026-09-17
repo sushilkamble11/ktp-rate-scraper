@@ -6,8 +6,8 @@ GET {BASE}/api/accommodation/get-availability-pricing/
 with header x-nb-api-key - exactly what their book-now page sends.
 
 A date range (up to ~3 months) returns, per category, the "Standard Rate"
-(flexible) plan with a price for every night (RatePerDay) plus Total and
-MemberTotal (My NRMA 10% off), and units available per night.
+(flexible) plan with a price for every night (RatePerDay) and units available
+per night. Member rate = 10% off, capped at $60 a booking (checked live).
 NRMA loads prices further out than it takes bookings: nights after the last
 bookable night are marked "not bookable" but their rates are kept.
 
@@ -42,6 +42,14 @@ def _standard(acc):
     return plans[0] if plans else None
 
 
+def member(rack):
+    """My NRMA rate for a 1-night booking: 10% off, capped at $60 a booking.
+    (The range's own MemberTotal can't be used - the cap applies to the whole range.)"""
+    if not rack:
+        return None
+    return rack - min(rack * config.NRMA_MEMBER_PCT / 100, config.NRMA_MEMBER_CAP)
+
+
 def parse_range(payload):
     """-> list of night records for the range."""
     accs = (payload or {}).get("Accommodation") or []
@@ -58,8 +66,6 @@ def parse_range(payload):
         for item in p.get("RatePerDay") or []:
             for d, v in item.items():
                 per_day[d] = float(v.get("Amount") or 0)
-        total, mem = float(p.get("Total") or 0), float(p.get("MemberTotal") or 0)
-        ratio = mem / total if total and mem else 1.0
         units = acc.get("Availability") or {}
         for d, amt in sorted(per_day.items()):
             u = units.get(d)
@@ -72,7 +78,7 @@ def parse_range(payload):
             else:
                 st = "open"
             out.append(night(PARK, acc["Id"], acc.get("Name", ""), date.fromisoformat(d),
-                             rate=amt * ratio if amt else None, rack=amt or None,
+                             rate=member(amt), rack=amt or None,
                              units=u, status=st))
     return out
 
