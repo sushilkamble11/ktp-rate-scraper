@@ -1,0 +1,399 @@
+<title>KTP Rate Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#edf0ed; --panel:#ffffff; --panel-2:#f5f7f5; --ink:#16201c; --muted:#5d6a64; --faint:#8b9791;
+  --line:#d8dfdb; --accent:#2e5e52; --accent-soft:#dfeae5;
+  --raise:#1d6fa5; --raise-soft:#dcebf6; --lower:#b4501c; --lower-soft:#f8e4d8;
+  --cell:#e3e8e5; --cell-empty:#f1f3f1; --sold:#5d6a64; --warn-bg:#fbe3d6; --warn-ink:#8a3a10;
+  --display:"Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1412; --panel:#161e1b; --panel-2:#1b2521; --ink:#e3e9e5; --muted:#9aa8a1; --faint:#6f7d76;
+    --line:#27322d; --accent:#8cc3b2; --accent-soft:#1f302a;
+    --raise:#62aee6; --raise-soft:#16293a; --lower:#ec925e; --lower-soft:#3a2418;
+    --cell:#222c28; --cell-empty:#19211e; --sold:#9aa8a1; --warn-bg:#3a2418; --warn-ink:#f2b08a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1412; --panel:#161e1b; --panel-2:#1b2521; --ink:#e3e9e5; --muted:#9aa8a1; --faint:#6f7d76;
+  --line:#27322d; --accent:#8cc3b2; --accent-soft:#1f302a;
+  --raise:#62aee6; --raise-soft:#16293a; --lower:#ec925e; --lower-soft:#3a2418;
+  --cell:#222c28; --cell-empty:#19211e; --sold:#9aa8a1; --warn-bg:#3a2418; --warn-ink:#f2b08a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 72px}
+h1,h2{font-family:var(--display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1{font-size:30px;line-height:1.1}
+h2{font-size:20px}
+h3{font-size:15px;margin:0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:12.5px} .num{font-variant-numeric:tabular-nums}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+section{margin-top:34px}
+.sec-head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.sec-head p{margin:4px 0 0;max-width:70ch}
+button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 11px;cursor:pointer}
+button:focus-visible,select:focus-visible,.day:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.alert{margin-top:14px;background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:9px 13px;font-weight:600}
+
+/* coverage timeline */
+.cov{margin-top:20px;padding:14px 16px}
+.cov-row{display:grid;grid-template-columns:118px 1fr;gap:12px;align-items:center;padding:5px 0}
+.cov-track{position:relative;height:14px;background:var(--cell-empty);border-radius:4px;overflow:hidden}
+.cov-track .priced{position:absolute;top:0;bottom:0;background:var(--accent-soft)}
+.cov-track .open{position:absolute;top:3px;bottom:3px;background:var(--accent);border-radius:3px}
+.cov-scale{display:grid;grid-template-columns:118px 1fr;gap:12px}
+.cov-ticks{position:relative;height:18px;font-size:11px;color:var(--faint)}
+.cov-ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.cov-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.key{display:inline-block;width:18px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* actions */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.act-col{padding:16px}
+.act-col h2{font-size:18px;display:flex;align-items:baseline;gap:8px}
+.act-col h2 .count{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted)}
+.act-col.raise h2{color:var(--raise)} .act-col.lower h2{color:var(--lower)}
+.act{display:grid;grid-template-columns:1fr auto;gap:4px 14px;padding:11px 0;border-top:1px solid var(--line)}
+.act:first-of-type{border-top:0}
+.act .what{font-weight:650}
+.act .when{font-size:13px;color:var(--muted)}
+.act .price{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.act .price .now{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px;margin-right:6px}
+.act .price .to{font-weight:700;font-size:17px}
+.raise .to{color:var(--raise)} .lower .to{color:var(--lower)}
+.act .mk{grid-column:1 / -1;font-size:12.5px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.tag{display:inline-block;font-size:11px;font-weight:650;padding:1px 7px;border-radius:999px;background:var(--raise-soft);color:var(--raise)}
+.tag.close{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.more{margin-top:8px}
+.empty{padding:14px 0;color:var(--muted)}
+
+/* guide */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-size:11.5px;font-weight:650;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.guide td.r b{font-weight:700}
+.guide .src{font-size:11px;color:var(--faint)}
+
+/* months */
+.months{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.mchip{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:7px 11px;min-width:78px;text-align:left}
+.mchip .mn{font-weight:650;font-size:13px}
+.mchip .mi{font-size:11px;color:var(--muted);display:flex;gap:6px}
+.mchip .up{color:var(--raise);font-weight:700} .mchip .dn{color:var(--lower);font-weight:700}
+.mchip.on{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.mchip.on .mi,.mchip.on .up,.mchip.on .dn{color:var(--panel)}
+.mchip.year{background:transparent;border:0;cursor:default;font-weight:700;color:var(--faint);min-width:auto;padding-inline:4px;justify-content:center}
+.month-body{margin-top:12px;padding:16px}
+.mhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.mhead p{margin:4px 0 0}
+.heat{margin-top:14px}
+.heat table{width:auto;border-collapse:separate;border-spacing:3px}
+.heat th,.heat td{border:0;padding:0}
+.heat th.cat{text-align:left;padding-right:10px;font-size:12.5px;color:var(--ink);font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--panel);z-index:1}
+.heat th.dh{width:26px;text-align:center;font-size:10.5px;line-height:1.15;color:var(--faint);font-weight:500}
+.heat th.dh.we{color:var(--ink);font-weight:700}
+.day{display:block;width:26px;height:26px;border-radius:5px;background:var(--cell);border:0;padding:0;position:relative}
+.day.n{background:var(--cell-empty);cursor:default}
+.day.s::after{content:"";position:absolute;inset:0;border-radius:5px;background:repeating-linear-gradient(135deg,transparent 0 4px,color-mix(in srgb,var(--sold) 55%,transparent) 4px 5.5px)}
+.day.m::before{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--ink);opacity:.55}
+.day.act-raise{box-shadow:inset 0 0 0 2px var(--raise)}
+.day.act-lower{box-shadow:inset 0 0 0 2px var(--lower)}
+.day.sel{outline:2px solid var(--ink);outline-offset:1px}
+.scale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted)}
+.scale .bar{width:180px;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--raise),var(--cell),var(--lower))}
+.scale .sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-3px;margin-right:4px;background:var(--cell)}
+.detail{margin-top:12px;padding:12px 14px;background:var(--panel-2);border-radius:8px;min-height:64px}
+.detail .dl{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px}
+.detail .dl div{min-width:120px}
+.detail .k{font-size:11.5px;color:var(--muted)}
+.detail .v{font-weight:650;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;padding:1px 8px;border-radius:999px;font-weight:650;font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip.raise{background:var(--raise-soft);color:var(--raise)}
+.chip.lower{background:var(--lower-soft);color:var(--lower)}
+.chip.inl{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.mtable{margin-top:16px}
+.mtable td .sub{display:block;font-size:11.5px;color:var(--muted)}
+details{margin-top:12px}
+details > summary{cursor:pointer;font-weight:650;padding:12px 16px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details > summary::-webkit-details-marker{display:none}
+details > summary::after{content:"+";font-size:18px;color:var(--muted)}
+details[open] > summary::after{content:"–"}
+details .inner{padding:0 16px 16px}
+.foot{margin-top:28px;font-size:12px;color:var(--faint)}
+@media (max-width:760px){
+  .actions{grid-template-columns:1fr}
+  h1{font-size:25px}
+  .cov-row,.cov-scale{grid-template-columns:84px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<!--HEAD-END-->
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Kosciuszko Tourist Park</div>
+      <h1>Rate Desk</h1>
+      <p class="muted" id="sub" style="margin:6px 0 0"></p>
+    </div>
+    <button type="button" id="theme">Dark / light</button>
+  </header>
+  <div id="alert"></div>
+
+  <div class="panel cov" id="coverage" aria-label="How far ahead each park has rates"></div>
+
+  <section aria-labelledby="h-act">
+    <div class="sec-head">
+      <div>
+        <h2 id="h-act">What to change</h2>
+        <p class="muted small" id="act-note"></p>
+      </div>
+      <select id="act-month" aria-label="Filter actions by month"></select>
+    </div>
+    <div class="actions">
+      <div class="panel act-col raise"><h2>Room to raise <span class="count" id="n-raise"></span></h2><div id="list-raise"></div></div>
+      <div class="panel act-col lower"><h2>Priced above market <span class="count" id="n-lower"></span></h2><div id="list-lower"></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-guide" id="guide-sec">
+    <div class="sec-head">
+      <div>
+        <h2 id="h-guide">Opening-rate guide</h2>
+        <p class="muted small">Months where your rates aren't loaded yet but a competitor's are. Figures are the market member rate per night (median for the month) – a starting point for setting yours. Where only NRMA has loaded rates, both 2BR types read off its Lake View Villa.</p>
+      </div>
+    </div>
+    <div class="panel scroll"><table class="guide" id="guide"></table></div>
+  </section>
+
+  <section aria-labelledby="h-month">
+    <div class="sec-head">
+      <div>
+        <h2 id="h-month">Month by month</h2>
+        <p class="muted small">Each square is one night. Colour shows where your rate sits against the market; tap a square for the numbers.</p>
+      </div>
+    </div>
+    <div class="months" id="months" role="tablist" aria-label="Months"></div>
+    <div class="panel month-body" id="month"></div>
+  </section>
+
+  <section aria-labelledby="h-more">
+    <h2 id="h-more">Reference</h2>
+    <details class="panel"><summary>Extra guest charges</summary><div class="inner scroll"><table id="extras"></table></div></details>
+    <details class="panel"><summary>Competitor price moves since last week</summary><div class="inner" id="moves"></div></details>
+    <details class="panel"><summary>Which rooms are compared</summary><div class="inner scroll"><table id="mapping"></table></div></details>
+    <details class="panel"><summary>How the numbers work</summary><div class="inner small" id="how"></div></details>
+  </section>
+  <p class="foot" id="foot"></p>
+</div>
+<script>
+const D = /*__DATA__*/null;
+const COMPS = Object.keys(D.comps);
+const CATS = D.cats, CAT = Object.fromEntries(CATS.map(c => [c.key, c]));
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = x => x == null ? "–" : "$" + Math.round(x).toLocaleString("en-AU");
+const pct = x => { if (x == null) return "–"; const v = Math.round(x); return (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v) + "%"; };
+const D8 = iso => new Date(iso + "T00:00:00");
+const fmt = (iso, o) => D8(iso).toLocaleDateString("en-AU", o);
+const monthName = (ym, long) => fmt(ym + "-01", {month: long ? "long" : "short", year: "numeric"});
+const shortName = p => p === "ktp" ? "KTP" : D.comps[p].short;
+const verdictCls = g => g == null ? "inl" : g <= -D.cfg.band ? "raise" : g >= D.cfg.band ? "lower" : "inl";
+// grid cell layout: [ktpRate, ktpSt, ktpUnits, (compRate, compSt)*, market, gap, action, soldOut]
+const CI = i => 3 + i * 2;
+const MI = 3 + COMPS.length * 2;
+
+try { const t = localStorage.getItem("ratedesk-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$("#theme").onclick = () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("ratedesk-theme", next); } catch (e) {}
+};
+
+$("#sub").textContent = `Your direct rates against ${COMPS.map(c => D.comps[c].label).join(" and ")} (member rates) · updated ${D.run.nice}`;
+if (Object.keys(D.failures || {}).length)
+  $("#alert").innerHTML = `<div class="alert">Missing this run: ${esc(Object.entries(D.failures).map(([k, v]) => shortName(k) + " – " + v).join("; "))}</div>`;
+
+/* ---------- coverage timeline ---------- */
+(function coverage() {
+  const w = D.coverage._window, t0 = D8(w.start).getTime(), t1 = D8(w.end).getTime();
+  const x = iso => Math.max(0, Math.min(100, (D8(iso).getTime() - t0) / (t1 - t0) * 100));
+  const rows = ["ktp", ...COMPS].filter(p => D.coverage[p]).map(p => {
+    const c = D.coverage[p];
+    const priced = c.priced_to ? `<div class="priced" style="left:0;width:${x(c.priced_to)}%"></div>` : "";
+    const open = c.open_to ? `<div class="open" style="left:0;width:${x(c.open_to)}%"></div>` : "";
+    const txt = c.priced_to ? `rates to ${fmt(c.priced_to, {day: "numeric", month: "short", year: "2-digit"})}` +
+      (c.open_to && c.open_to !== c.priced_to ? ` · bookings to ${fmt(c.open_to, {day: "numeric", month: "short", year: "2-digit"})}` : "") : "no rates loaded";
+    return `<div class="cov-row"><div><b>${shortName(p)}</b><div class="small muted">${txt}</div></div><div class="cov-track">${priced}${open}</div></div>`;
+  }).join("");
+  const ticks = [];
+  for (let y = D8(w.start).getFullYear(); y <= D8(w.end).getFullYear() + 1; y++)
+    for (const mo of ["01", "07"]) { const iso = `${y}-${mo}-01`; if (iso > w.start && iso <= w.end) ticks.push(`<span style="left:${x(iso)}%">${fmt(iso, {month: "short", year: "2-digit"})}</span>`); }
+  $("#coverage").innerHTML = `<div class="eyebrow" style="margin-bottom:6px">How far ahead rates are loaded · ${fmt(w.start, {day: "numeric", month: "short", year: "numeric"})} → ${fmt(w.end, {day: "numeric", month: "short", year: "numeric"})}</div>
+    ${rows}<div class="cov-scale"><div></div><div class="cov-ticks">${ticks.join("")}</div></div>
+    <div class="cov-legend small muted"><span><i class="key" style="background:var(--accent)"></i>taking bookings</span><span><i class="key" style="background:var(--accent-soft)"></i>rates loaded, not bookable yet</span><span><i class="key" style="background:var(--cell-empty);border:1px solid var(--line)"></i>nothing loaded</span></div>`;
+})();
+
+/* ---------- actions ---------- */
+const spansText = spans => spans.map(([a, b]) => {
+  const da = D8(a), db = D8(b);
+  if (a === b) return String(da.getDate());
+  return da.getMonth() === db.getMonth() ? `${da.getDate()}–${db.getDate()}` : `${fmt(a, {day: "numeric", month: "short"})}–${fmt(b, {day: "numeric", month: "short"})}`;
+}).join(", ");
+const actMonths = [...new Set(D.actions.map(a => a.month))].sort();
+$("#act-month").innerHTML = `<option value="">All months</option>` + actMonths.map(m => `<option value="${m}">${monthName(m, true)}</option>`).join("");
+let showAll = {raise: false, lower: false};
+function actHTML(a) {
+  const comps = COMPS.filter(c => a.comps[c] != null).map(c => `${esc(D.comps[c].short)} ${money(a.comps[c])}`).join(" · ");
+  const sold = a.sold_out.length ? `<span class="tag">${a.sold_out.map(s => esc(D.comps[s].short)).join(" & ")} sold out</span>` : "";
+  const match = COMPS.some(c => CAT[a.cat].comps[c]?.match === "close") ? "" : "";
+  return `<div class="act">
+    <div><div class="what">${esc(a.label)}</div>
+      <div class="when">${monthName(a.month)} ${a.weekend ? "Fri &amp; Sat nights" : "weeknights"} · ${esc(spansText(a.spans))} <span class="num">(${a.nights} night${a.nights > 1 ? "s" : ""})</span></div></div>
+    <div class="price"><span class="now">${money(a.ktp)}</span><span class="to">${money(a.suggest)}</span><div class="small muted">${pct(a.gap)} vs market</div></div>
+    <div class="mk"><span>Market ${money(a.market)}${comps ? " – " + comps : ""}</span>${sold}${match}</div>
+  </div>`;
+}
+function renderActions() {
+  const m = $("#act-month").value;
+  for (const kind of ["raise", "lower"]) {
+    const list = D.actions.filter(a => a.action === kind && (!m || a.month === m));
+    const shown = showAll[kind] ? list : list.slice(0, 6);
+    $("#n-" + kind).textContent = list.length ? `${list.length} to review` : "";
+    $("#list-" + kind).innerHTML = (shown.length ? shown.map(actHTML).join("") : `<div class="empty">Nothing ${m ? "this month" : "right now"}.</div>`) +
+      (list.length > 6 ? `<button type="button" class="more" data-kind="${kind}">${showAll[kind] ? "Show fewer" : "Show all " + list.length}</button>` : "");
+  }
+  document.querySelectorAll("button.more").forEach(b => b.onclick = () => { showAll[b.dataset.kind] = !showAll[b.dataset.kind]; renderActions(); });
+}
+$("#act-month").onchange = renderActions;
+$("#act-note").textContent = `Grouped by month and by weeknights vs Fri & Sat nights, biggest dollar gap first. Raise when you're ${D.cfg.raise}%+ under the market (or ${D.cfg.band}%+ under while a competitor is sold out); lower when you're ${D.cfg.lower}%+ over. Suggested rate = the market rate, rounded to $${D.cfg.round}.`;
+renderActions();
+
+/* ---------- opening-rate guide ---------- */
+(function guide() {
+  const ms = D.months.filter(m => (m.ktp_open === 0) && (m.weeknight.market != null || m.weekend.market != null));
+  const months = [...new Set(ms.map(m => m.month))].sort();
+  if (!months.length) { $("#guide-sec").hidden = true; return; }
+  const get = (cat, mo) => ms.find(m => m.cat === cat && m.month === mo);
+  const src = m => COMPS.filter(c => m.weeknight[c] != null || m.weekend[c] != null).map(c => D.comps[c].short).join(" + ");
+  $("#guide").innerHTML = `<thead><tr><th>Category</th>${months.map(mo => `<th class="r">${monthName(mo)}</th>`).join("")}</tr></thead><tbody>` +
+    CATS.map(c => `<tr><td><b>${esc(c.label)}</b>${CATS.find(x => x.key === c.key).comps && COMPS.every(k => c.comps[k]?.match === "none") ? `<div class="small muted">no like-for-like – reference only</div>` : ""}</td>` +
+      months.map(mo => { const m = get(c.key, mo); if (!m) return `<td class="r muted">–</td>`;
+        return `<td class="r"><b>${money(m.weeknight.suggest)}</b> <span class="muted">wk</span><br><b>${money(m.weekend.suggest)}</b> <span class="muted">Fri/Sat</span><div class="src">${esc(src(m))}</div></td>`; }).join("") + `</tr>`).join("") + `</tbody>`;
+})();
+
+/* ---------- month by month ---------- */
+const months = [...new Set(D.dates.map(d => d.slice(0, 7)))];
+const byMonth = {}; D.months.forEach(m => (byMonth[m.month] ||= []).push(m));
+let curMonth = null, selCell = null;
+try { curMonth = localStorage.getItem("ratedesk-month"); } catch (e) {}
+if (!months.includes(curMonth)) curMonth = months[0];
+function monthChips() {
+  let lastYear = null, html = "";
+  for (const mo of months) {
+    const y = mo.slice(0, 4);
+    if (y !== lastYear) { html += `<span class="mchip year" aria-hidden="true">${y}</span>`; lastYear = y; }
+    const s = byMonth[mo] || [];
+    const up = s.reduce((a, m) => a + m.raise, 0), dn = s.reduce((a, m) => a + m.lower, 0);
+    const open = s.some(m => m.ktp_open > 0);
+    const info = open ? `${up ? `<span class="up">▲${up}</span>` : ""}${dn ? `<span class="dn">▼${dn}</span>` : ""}${!up && !dn ? "<span>in line</span>" : ""}` : `<span>not open</span>`;
+    html += `<button type="button" role="tab" class="mchip${mo === curMonth ? " on" : ""}" aria-selected="${mo === curMonth}" data-m="${mo}"><span class="mn">${fmt(mo + "-01", {month: "short"})}</span><span class="mi">${info}</span></button>`;
+  }
+  $("#months").innerHTML = html;
+  document.querySelectorAll(".mchip[data-m]").forEach(b => b.onclick = () => { curMonth = b.dataset.m; selCell = null; try { localStorage.setItem("ratedesk-month", curMonth); } catch (e) {} monthChips(); renderMonth(); });
+  const on = $(".mchip.on"); if (on) on.scrollIntoView({block: "nearest", inline: "center"});
+}
+function cellColor(gap) {
+  if (gap == null) return "var(--cell)";
+  const t = Math.min(1, Math.abs(gap) / 30), p = Math.round(18 + t * 82);
+  return `color-mix(in oklab, ${gap < 0 ? "var(--raise)" : "var(--lower)"} ${Math.abs(gap) < D.cfg.band ? Math.round(t * 60) : p}%, var(--cell))`;
+}
+function renderMonth() {
+  const idx = D.dates.map((d, i) => [d, i]).filter(([d]) => d.startsWith(curMonth));
+  const s = byMonth[curMonth] || [];
+  const up = s.reduce((a, m) => a + m.raise, 0), dn = s.reduce((a, m) => a + m.lower, 0);
+  const ktpOpen = s.some(m => m.ktp_open > 0);
+  const below = s.filter(m => [m.weeknight.gap, m.weekend.gap].some(g => g != null && g <= -D.cfg.band)).length;
+  const above = s.filter(m => [m.weeknight.gap, m.weekend.gap].some(g => g != null && g >= D.cfg.band)).length;
+  const lede = ktpOpen ? `${up} night${up === 1 ? "" : "s"} flagged to raise, ${dn} to lower. Under market somewhere in ${below} categor${below === 1 ? "y" : "ies"}, over in ${above}.`
+    : `Your rates for this month aren't loaded yet – use the market figures below to set them.`;
+  const head = `<th class="cat"></th>` + idx.map(([d]) => { const dt = D8(d), we = dt.getDay() === 5 || dt.getDay() === 6;
+    return `<th class="dh${we ? " we" : ""}">${fmt(d, {weekday: "narrow"})}<br>${dt.getDate()}</th>`; }).join("");
+  const body = CATS.map(c => `<tr><th class="cat" scope="row">${esc(c.label)}</th>` + idx.map(([d, i]) => {
+    const g = D.grid[c.key][i]; if (!g) return `<td><span class="day n"></span></td>`;
+    const st = g[1], gap = g[MI + 1], act = g[MI + 2];
+    const cls = ["day", st === "n" ? "n" : "", st === "s" ? "s" : "", st === "m" ? "m" : "", act ? "act-" + act : "", selCell && selCell[0] === c.key && selCell[1] === i ? "sel" : ""].join(" ");
+    const noKtp = st === "n" || g[0] == null;
+    const bg = noKtp ? (g[MI] != null ? "var(--cell-empty)" : "var(--cell-empty)") : cellColor(gap);
+    const label = `${c.label} ${fmt(d, {weekday: "short", day: "numeric", month: "short"})}: KTP ${noKtp ? "not open" : money(g[0])}, market ${money(g[MI])}`;
+    return `<td><button type="button" class="${cls}" style="background:${bg}" data-c="${c.key}" data-i="${i}" aria-label="${esc(label)}"></button></td>`;
+  }).join("") + `</tr>`).join("");
+  const rows = CATS.map(c => {
+    const m = s.find(x => x.cat === c.key); if (!m) return "";
+    const none = COMPS.every(k => c.comps[k]?.match === "none");
+    const cell = p => `<td class="r">${money(p.ktp)}<span class="sub">mkt ${money(p.market)}</span></td><td class="r">${p.gap == null ? "–" : none ? `<span class="muted">${pct(p.gap)}</span>` : `<span class="chip ${verdictCls(p.gap)}">${pct(p.gap)}</span>`}</td>`;
+    const comp = p => COMPS.map(k => `<td class="r">${money(p[k])}</td>`).join("");
+    return `<tr><td><b>${esc(c.label)}</b>${none ? `<span class="sub">reference only</span>` : ""}</td>${cell(m.weeknight)}${comp(m.weeknight)}${cell(m.weekend)}${comp(m.weekend)}</tr>`;
+  }).join("");
+  const compHead = COMPS.map(k => `<th class="r">${esc(D.comps[k].short)}</th>`).join("");
+  $("#month").innerHTML = `
+    <div class="mhead"><div><h2>${monthName(curMonth, true)}</h2><p class="muted">${lede}</p></div></div>
+    <div class="heat scroll"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>
+    <div class="scale"><span>You're under market</span><span class="bar"></span><span>over market</span>
+      <span style="margin-left:12px"><span class="sw" style="box-shadow:inset 0 0 0 2px var(--raise)"></span>flagged</span>
+      <span><span class="sw" style="background:repeating-linear-gradient(135deg,var(--cell) 0 4px,var(--sold) 4px 5.5px)"></span>you're sold out</span>
+      <span><span class="sw" style="position:relative;background:var(--cell)"></span>• min stay</span>
+      <span><span class="sw" style="background:var(--cell-empty);border:1px solid var(--line)"></span>not open</span></div>
+    <div class="detail" id="detail" aria-live="polite"></div>
+    <div class="mtable scroll"><table>
+      <thead><tr><th rowspan="2">Category</th><th colspan="${2 + COMPS.length}">Weeknights (Sun–Thu) · avg per night</th><th colspan="${2 + COMPS.length}">Fri &amp; Sat nights · avg per night</th></tr>
+      <tr><th class="r">You</th><th class="r">vs market</th>${compHead}<th class="r">You</th><th class="r">vs market</th>${compHead}</tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  document.querySelectorAll("#month .day[data-c]").forEach(b => b.onclick = () => { selCell = [b.dataset.c, +b.dataset.i]; document.querySelectorAll("#month .day.sel").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); renderDetail(); });
+  renderDetail();
+}
+function renderDetail() {
+  const box = $("#detail");
+  if (!selCell) { box.innerHTML = `<span class="muted small">Tap a square to see that night's rates.</span>`; return; }
+  const [ck, i] = selCell, g = D.grid[ck][i], d = D.dates[i], c = CAT[ck];
+  const stTxt = {o: "open", s: "sold out", m: "min stay", b: "rate loaded, not bookable yet", n: "not open"};
+  const ktp = g[1] === "n" ? "not open" : `${money(g[0])} <span class="muted small">${stTxt[g[1]]}${g[2] != null && g[1] === "o" ? `, ${g[2]} left` : ""}</span>`;
+  const comps = COMPS.map((k, j) => { const m = c.comps[k] || {}; const r = g[CI(j)], s2 = g[CI(j) + 1];
+    return `<div><div class="k">${esc(D.comps[k].short)} · ${esc(m.name || "–")}${m.match === "close" ? " (close)" : m.match === "none" ? " (reference)" : ""}</div><div class="v">${s2 === "n" || r == null ? "not open" : money(r) + (s2 === "s" || s2 === "b" ? ` <span class="muted small">${stTxt[s2]}</span>` : "")}</div></div>`; }).join("");
+  const act = g[MI + 2];
+  const sug = act ? `<div><div class="k">Suggestion</div><div class="v" style="color:var(--${act})">${act === "raise" ? "Raise" : "Lower"} to about ${money(Math.round(g[MI] / D.cfg.round) * D.cfg.round)}</div></div>` : "";
+  box.innerHTML = `<b>${esc(c.label)}</b> · ${fmt(d, {weekday: "long", day: "numeric", month: "long", year: "numeric"})}
+    <div class="dl"><div><div class="k">You</div><div class="v">${ktp}</div></div>${comps}
+    <div><div class="k">Market</div><div class="v">${money(g[MI])} ${g[MI + 1] != null ? `<span class="chip ${verdictCls(g[MI + 1])}">${pct(g[MI + 1])}</span>` : ""}</div></div>${sug}</div>`;
+}
+monthChips(); renderMonth();
+
+/* ---------- reference ---------- */
+$("#extras").innerHTML = `<thead><tr><th>Category</th><th class="r">You adult</th><th class="r">You child</th>${COMPS.map(k => `<th>${esc(D.comps[k].short)} room</th><th class="r">Adult</th><th class="r">Child</th>`).join("")}</tr></thead><tbody>` +
+  D.extras.map(e => `<tr><td>${esc(e.label)}</td><td class="r">${money(e.ktp.adult)}</td><td class="r">${money(e.ktp.child)}</td>` +
+    COMPS.map(k => `<td class="small muted">${esc(e[k]?.room || "–")}</td><td class="r">${money(e[k]?.adult)}</td><td class="r">${money(e[k]?.child)}</td>`).join("") + `</tr>`).join("") +
+  `</tbody><caption class="small muted" style="caption-side:bottom;text-align:left;padding-top:8px">Per extra person, per night, above 2 adults.</caption>`;
+$("#moves").innerHTML = !D.run.prev ? `<p class="muted" style="margin:0">First run of the new format – next week's update will list what competitors changed.</p>`
+  : !D.moves.length ? `<p class="muted" style="margin:0">No changes of $10+ and 10%+ since ${esc(D.run.prev)}.</p>`
+  : `<div class="scroll"><table><thead><tr><th>Park</th><th>Room</th><th>Nights</th><th class="r">Was</th><th class="r">Now</th></tr></thead><tbody>` +
+    D.moves.map(m => `<tr><td>${esc(D.comps[m.park]?.short || m.park)}</td><td>${esc(m.room)}</td><td>${monthName(m.month)} · ${esc(spansText(m.spans))}</td><td class="r">${money(m.was)}</td><td class="r"><b style="color:var(--${m.direction === "up" ? "raise" : "lower"})">${money(m.now)}</b></td></tr>`).join("") + `</tbody></table></div>`;
+$("#mapping").innerHTML = `<thead><tr><th>Your category</th>${COMPS.map(k => `<th>${esc(D.comps[k].short)}</th>`).join("")}</tr></thead><tbody>` +
+  CATS.map(c => `<tr><td><b>${esc(c.label)}</b><div class="small muted">${esc(c.spec)}</div></td>` + COMPS.map(k => { const m = c.comps[k] || {};
+    return `<td>${esc(m.name || "–")} <span class="tag ${m.match === "exact" ? "" : "close"}">${m.match === "none" ? "no equivalent" : m.match}</span><div class="small muted">${esc(m.note || "")}</div></td>`; }).join("") + `</tr>`).join("") + `</tbody>`;
+$("#how").innerHTML = `<p style="margin-top:0"><b>Rates.</b> Nightly rate for 2 adults. You: ${esc(D.ktpBasis.toLowerCase())}. ${COMPS.map(k => `${esc(D.comps[k].short)}: ${esc(D.comps[k].price_basis)}`).join(". ")}.</p>
+  <p><b>Market</b> is the average of the competitor rooms marked exact or close for that category. Categories with no equivalent are shown for reference and never flagged.</p>
+  <p><b>Flags.</b> Raise: ${D.cfg.raise}%+ under market, or ${D.cfg.band}%+ under while a competitor is sold out. Lower: ${D.cfg.lower}%+ over market and no competitor sold out. Min-stay nights are priced as a share of the minimum stay.</p>
+  <p style="margin-bottom:0"><b>Not open</b> means that park hasn't loaded or released rates for the night yet. Rates are checked out to the end of 2028 every week and appear here as parks load them.</p>`;
+$("#foot").textContent = `Generated ${D.run.generated || D.run.nice}` + (D.run.note ? ` · ${D.run.note}` : "") + ` · nightly rates: ${Object.entries(D.counts).map(([k, v]) => shortName(k) + " " + v).join(", ")}`;
+</script>

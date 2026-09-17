@@ -1,15 +1,15 @@
 """
 Weekly KTP competitor rate check.
 
-  python run.py                    full run (scrape, compare, write reports, email)
-  python run.py --days 7           quick test over 7 days
+  python run.py                    full run (collect, compare, write reports, email)
+  python run.py --end 2027-03-31   shorter window
   python run.py --only ktp,nrma    just some parks
   python run.py --browser          fetch everything through a real browser
   python run.py --no-email         skip the email
-  python run.py --rebuild          re-render reports from data/latest.json (no scraping)
+  python run.py --rebuild          re-render reports from data/latest.json (no fetching)
 
-Exits non-zero if any park failed or returned no prices, so GitHub marks the
-run red instead of silently saving empty data.
+Exits non-zero if any park it was asked to cover failed or returned no prices,
+so GitHub marks the run red instead of silently saving empty data.
 """
 
 import argparse
@@ -27,12 +27,11 @@ import config
 import notify
 import report
 from scrapers import discovery, ktp, nrma
-from scrapers.common import stay_plan
 from scrapers.fetch import Fetcher
 
 log = logging.getLogger("run")
 TZ = ZoneInfo("Australia/Sydney")
-PARKS = ("ktp", "discovery", "nrma")
+PARKS = {"ktp": ktp, "discovery": discovery, "nrma": nrma}
 
 
 def load_mapping():
@@ -40,7 +39,7 @@ def load_mapping():
         return json.load(f)
 
 
-def read_snapshot(path):
+def read_json(path):
     opener = gzip.open if path.endswith(".gz") else open
     with opener(path, "rt") as f:
         return json.load(f)
@@ -48,74 +47,80 @@ def read_snapshot(path):
 
 def previous_snapshot(run_date):
     files = sorted(glob.glob(os.path.join(config.SNAPSHOT_DIR, "*.json.gz")))
-    older = [f for f in files if os.path.basename(f)[:10] < run_date]
-    if not older:
-        return None
-    return read_snapshot(older[-1])
+    for f in reversed(files):
+        if os.path.basename(f)[:10] < run_date:
+            snap = read_json(f)
+            if "nights" in snap:            # older per-stay snapshots can't be compared
+                return snap
+    return None
 
 
-def scrape(parks, days, force_browser):
+def collect(parks, end, force_browser):
     mapping = load_mapping()
     start = datetime.now(TZ).date() + timedelta(days=1)
-    plan = stay_plan(start, days)
     fetcher = Fetcher(force_browser=force_browser)
-    records, failures = [], {}
+    nights, extras, failures = [], [], {}
     try:
         for park in parks:
             log.info("== %s ==", park)
             try:
-                if park == "ktp":
-                    recs = ktp.collect(fetcher, mapping, start, days)
-                elif park == "discovery":
-                    recs = discovery.collect(fetcher, mapping, plan)
-                else:
-                    recs = nrma.collect(fetcher, mapping, plan)
-            except Exception as e:   # keep going with the other parks
+                n, e = PARKS[park].collect(fetcher, mapping, start, end)
+            except Exception as ex:          # keep going with the other parks
                 log.exception("%s failed", park)
-                failures[park] = str(e)[:300]
+                failures[park] = str(ex)[:300]
                 continue
-            priced = sum(1 for r in recs if r["price"] is not None)
-            log.info("%s: %d records, %d with a price", park, len(recs), priced)
+            priced = sum(1 for x in n if x["rate"] is not None)
+            log.info("%s: %d nights, %d priced, %d extras samples", park, len(n), priced, len(e))
             if priced == 0:
                 failures[park] = "no prices returned"
-            records.extend(recs)
+            nights.extend(n)
+            extras.extend(e)
     finally:
-        log.info("HTTP calls: %d; browser mode used for: %s", fetcher.calls,
+        log.info("requests: %d; browser mode used for: %s", fetcher.calls,
                  ", ".join(sorted(fetcher.browser_sites)) or "none")
         fetcher.close()
     return {
         "run_date": datetime.now(TZ).date().isoformat(),
         "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
-        "window": {"start": start.isoformat(), "days": days},
+        "window": {"start": start.isoformat(), "end": end.isoformat()},
         "parks": list(parks),
         "failures": failures,
         "browser_mode": sorted(fetcher.browser_sites),
-        "records": records,
+        "nights": nights,
+        "extras": extras,
     }
 
 
 def build_context(snap, prev):
     mapping = load_mapping()
-    # only show the competitors this run actually covered
     mapping["competitors"] = {k: v for k, v in mapping["competitors"].items() if k in snap["parks"]}
-    rows = compare.build_rows(snap["records"], mapping)
-    summary, monthly = compare.summarise(rows, mapping)
-    prev_records = prev["records"] if prev else []
+    start = date.fromisoformat(snap["window"]["start"])
+    end = date.fromisoformat(snap["window"]["end"])
+    rows = compare.build_days(snap["nights"], mapping, start, end)
+    cov = compare.coverage(snap["nights"], mapping, start, end)
+    last = max([v["priced_to"] for k, v in cov.items() if not k.startswith("_") and v["priced_to"]],
+               default=None)
+    rows = [r for r in rows if last and r["date"] <= last]      # drop months nobody has priced yet
     counts = {}
-    for r in snap["records"]:
-        if r["price"] is not None:
-            counts[r["park"]] = counts.get(r["park"], 0) + 1
+    for n in snap["nights"]:
+        if n["rate"] is not None:
+            counts[n["park"]] = counts.get(n["park"], 0) + 1
     return {
         "mapping": mapping,
         "run_date": snap["run_date"],
         "run_date_nice": date.fromisoformat(snap["run_date"]).strftime("%-d %b %Y"),
+        "generated_at": snap.get("generated_at"),
+        "window": snap["window"],
         "prev_date": prev["run_date"] if prev else None,
-        "rows": rows, "summary": summary, "monthly": monthly,
-        "extras": compare.extras_table(rows, mapping),
-        "moves": compare.price_moves(snap["records"], prev_records, mapping),
-        "headline": compare.headline(summary),
+        "rows": rows,
+        "actions": compare.actions(rows, mapping),
+        "months": compare.month_summary(rows, mapping),
+        "coverage": cov,
+        "extras": compare.extras_table(snap.get("extras", []), mapping),
+        "moves": compare.price_moves(snap["nights"], prev["nights"] if prev else [], mapping),
         "failures": snap["failures"],
         "counts": counts,
+        "note": snap.get("note"),
     }
 
 
@@ -125,8 +130,11 @@ def write_outputs(snap, ctx, save_snapshot=True):
     if save_snapshot:
         with gzip.open(os.path.join(config.SNAPSHOT_DIR, f"{snap['run_date']}.json.gz"), "wt") as f:
             json.dump(snap, f, separators=(",", ":"))
-        with open(os.path.join(config.DATA_DIR, "latest.json"), "w") as f:
+        with gzip.open(os.path.join(config.DATA_DIR, "latest.json.gz"), "wt") as f:
             json.dump(snap, f, separators=(",", ":"))
+        old = os.path.join(config.DATA_DIR, "latest.json")
+        if os.path.exists(old):
+            os.remove(old)
     dash = report.dashboard_html(ctx)
     csv_text = report.csv_text(ctx)
     with open(os.path.join(config.REPORT_DIR, "latest.html"), "w") as f:
@@ -144,20 +152,20 @@ def write_outputs(snap, ctx, save_snapshot=True):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=config.DAYS_AHEAD)
+    ap.add_argument("--end", default=config.END_DATE.isoformat())
     ap.add_argument("--only", default=",".join(PARKS))
     ap.add_argument("--browser", action="store_true")
     ap.add_argument("--no-email", action="store_true")
     ap.add_argument("--rebuild", action="store_true")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    logging.getLogger("httpx").setLevel(logging.WARNING)   # one line per request is too noisy
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     if args.rebuild:
-        snap = read_snapshot(os.path.join(config.DATA_DIR, "latest.json"))
+        snap = read_json(os.path.join(config.DATA_DIR, "latest.json.gz"))
     else:
         parks = [p.strip() for p in args.only.split(",") if p.strip() in PARKS]
-        snap = scrape(parks, args.days, args.browser)
+        snap = collect(parks, date.fromisoformat(args.end), args.browser)
 
     prev = previous_snapshot(snap["run_date"])
     ctx = build_context(snap, prev)
