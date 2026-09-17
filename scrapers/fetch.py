@@ -12,6 +12,7 @@ Once a site falls back to browser mode it stays there for the rest of the run.
 
 import json
 import logging
+import os
 import time
 
 import httpx
@@ -108,19 +109,41 @@ class Fetcher:
         except json.JSONDecodeError as e:
             raise FetchError(f"bad JSON (HTTP {status}): {text[:200]}") from e
 
+    def _launch(self):
+        from playwright.sync_api import sync_playwright
+        self._pw = sync_playwright().start()
+        # Look like an ordinary visitor: real Chrome if installed, a real
+        # (virtual) display when one exists, no automation flag.
+        kw = dict(headless=not os.environ.get("DISPLAY"),
+                  args=["--disable-blink-features=AutomationControlled"])
+        try:
+            self._browser = self._pw.chromium.launch(channel="chrome", **kw)
+        except Exception:
+            self._browser = self._pw.chromium.launch(**kw)
+        log.info("browser: %s %s, headless=%s", self._browser.browser_type.name,
+                 self._browser.version, kw["headless"])
+
     def _page_for(self, site, warmup_url):
         if site in self._pages:
             return self._pages[site]
         if not self._pw:
-            from playwright.sync_api import sync_playwright
-            self._pw = sync_playwright().start()
-            self._browser = self._pw.chromium.launch(headless=True)
-        ctx = self._browser.new_context(user_agent=UA, locale="en-AU",
-                                        timezone_id="Australia/Sydney")
+            self._launch()
+        ctx = self._browser.new_context(locale="en-AU", timezone_id="Australia/Sydney",
+                                        viewport={"width": 1366, "height": 900})
+        ctx.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         page = ctx.new_page()
         page.goto(warmup_url, wait_until="domcontentloaded",
                   timeout=config.TIMEOUT_SECONDS * 2000)
-        page.wait_for_timeout(4000)   # let any bot-check script finish
+        # Wait out any "checking your browser" interstitial.
+        title = ""
+        for _ in range(40):
+            title = (page.title() or "").lower()
+            if not any(k in title for k in ("just a moment", "attention required",
+                                            "access denied", "checking")):
+                break
+            page.wait_for_timeout(1000)
+        page.wait_for_timeout(3000)
+        log.info("%s warm-up page title: %r", site, page.title())
         self._pages[site] = page
         return page
 
