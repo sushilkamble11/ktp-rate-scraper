@@ -1,154 +1,123 @@
 """
-Scraper for Discovery Parks - Jindabyne.
+Discovery Parks Jindabyne (G'day Group booking API, park code NJIN).
 
-Discovery's park page accepts arrive/depart/adults/kids/infants as URL
-query params, but the room list + prices are loaded client-side (React)
-after the page loads, so we still need a real browser to render it.
+GET {API}/parks/NJIN/availability?checkIn=..&checkOut=..&adults=..&children=..&infants=0
+with header Gday-Caller: DhpWeb - the same call their park page makes.
+
+For each stay the response lists every room type as `available` (with a
+MemberOffer: baseAmount = public price, totalAmount = member price) or
+`unavailable` (sold out / min-stay not met, with minNightsStay when that's why).
+Every room type also carries a nightly price calendar, used to estimate a
+price when a stay can't be booked as asked (e.g. 1 night on a 3-night-min date).
+
+Extras come from a second call at 3 adults + 1 child (rateBreakdown gives
+additionalAdult and additionalChild). They're read on one weeknight a week and
+applied to that week, which keeps the request count down.
 """
 
-import re
-from datetime import date
+import logging
+from datetime import timedelta
 
-BASE_URL = "https://www.discoveryholidayparks.com.au/caravan-parks/new-south-wales/snowy-mountains/jindabyne"
+import config
+from .common import extras_probe_nights, nearest_week, record, week_key
 
-# Lines that are page chrome, not room data - skip these when parsing.
-SKIP_LINES = {
-    "Sort by",
-    "Highest Price First",
-    "Cabins Only",
-    "Sites Only",
-    "Available for your dates",
-    "Unavailable for your dates",
-    "View Availability",
-    "for members",
-    "View Stay",
-}
-
-AVAILABILITY_TAG_RE = re.compile(r"^\d+ (Cabin|Site)s? Left$")
-SLEEPS_RE = re.compile(r"^Sleeps (\d+)$")
-PRICE_RE = re.compile(r"^\$(\d+)$")
-AVAILABLE_FROM_RE = re.compile(r"^Available from")
-GUESTS_LINE_RE = re.compile(r"^\d+ Adults?,")
+log = logging.getLogger(__name__)
+PARK = "discovery"
+MEMBER_PCT = 0.10
+MEMBER_CAP = 50.0
 
 
-def build_url(arrive: date, depart: date, adults: int, kids: int, infants: int) -> str:
-    return (
-        f"{BASE_URL}?arrive={arrive.isoformat()}&depart={depart.isoformat()}"
-        f"&adults={adults}&kids={kids}&infants={infants}"
-    )
+def _url(check_in, nights, adults, children):
+    co = check_in + timedelta(days=nights)
+    return (f"{config.DISCOVERY_API}/parks/{config.DISCOVERY_PARK_CODE}/availability"
+            f"?checkIn={check_in.isoformat()}&checkOut={co.isoformat()}"
+            f"&adults={adults}&children={children}&infants=0")
 
 
-def parse_page_text(text: str, scrape_date: date):
-    """
-    Parses the visible text of the room list into structured records.
-    Returns a list of dicts: category, name, sleeps, price, price_member,
-    available (bool), scrape_date.
-    """
-    lines = [l.strip() for l in text.split("\n") if l.strip()]
+HEADERS = {"Gday-Caller": config.DISCOVERY_CALLER}
 
-    # Find where the actual listing starts (after the date/guest header).
-    start_idx = 0
-    for i, line in enumerate(lines):
-        if line == "Available for your dates":
-            start_idx = i
-            break
 
-    records = []
-    is_available_section = True
-    i = start_idx
-    n = len(lines)
+def _member_offer(room):
+    offers = room.get("offers") or []
+    for o in offers:
+        if o.get("templateCode") == "MemberOffer":
+            return o
+    return offers[0] if offers else None
 
-    while i < n:
-        line = lines[i]
 
-        if line == "Available for your dates":
-            is_available_section = True
-            i += 1
+def _calendar_total(room, check_in, nights):
+    cal = {a["date"][:10]: a for a in room.get("availability") or []}
+    total = 0.0
+    for i in range(nights):
+        a = cal.get((check_in + timedelta(days=i)).isoformat())
+        if not a or not a.get("price") or a.get("isAvailable") is False:
+            return None
+        total += a["price"]
+    return total
+
+
+def parse(payload, check_in, nights, stay):
+    """-> {room_code: record-kwargs} for one stay at base occupancy."""
+    res = (payload or {}).get("result") or {}
+    msgs = " ".join(m.get("message", "") for m in res.get("messages") or [])
+    out = {}
+    for room in res.get("available") or []:
+        o = _member_offer(room)
+        if not o:
             continue
-        if line == "Unavailable for your dates":
-            is_available_section = False
-            i += 1
+        p = o.get("price") or {}
+        out[room["code"]] = dict(name=room["name"], price=p.get("totalAmount"),
+                                 rack=p.get("baseAmount"), bookable=True, note="",
+                                 units_left=room.get("accommodationsAvailable"))
+    for room in res.get("unavailable") or []:
+        mn = room.get("minNightsStay")
+        note = f"min {mn} nights" if mn and mn > nights else "sold out"
+        rack = _calendar_total(room, check_in, nights) if mn and mn > nights else None
+        price = None if rack is None else rack - min(rack * MEMBER_PCT, MEMBER_CAP)
+        out[room["code"]] = dict(name=room["name"], price=price, rack=rack, bookable=False,
+                                 note=note, units_left=room.get("accommodationsAvailable"),
+                                 estimated=rack is not None)
+    if msgs and not out:
+        log.info("discovery %s: %s", check_in, msgs)
+    return out
+
+
+def parse_extras(payload, nights):
+    """-> {room_code: (extra_adult_per_night, extra_child_per_night)} from a 3A+1C call."""
+    res = (payload or {}).get("result") or {}
+    out = {}
+    for room in res.get("available") or []:
+        o = _member_offer(room)
+        rb = ((o or {}).get("price") or {}).get("rateBreakdown")
+        if rb is None:
             continue
-        if line in SKIP_LINES or GUESTS_LINE_RE.match(line):
-            i += 1
-            continue
-        if AVAILABILITY_TAG_RE.match(line):
-            # e.g. "1 Cabin Left" - informational, skip
-            i += 1
-            continue
-
-        # Otherwise this should be a category line (e.g. "Deluxe Cabin",
-        # "Powered Site"), followed by the room name.
-        category = line
-        i += 1
-        if i >= n:
-            break
-        name = lines[i]
-        i += 1
-
-        sleeps = None
-        if i < n:
-            m = SLEEPS_RE.match(lines[i])
-            if m:
-                sleeps = int(m.group(1))
-                i += 1
-
-        if i < n and lines[i] == "View Availability":
-            i += 1
-
-        price = None
-        price_member = None
-        if i < n and PRICE_RE.match(lines[i]):
-            price = int(PRICE_RE.match(lines[i]).group(1))
-            i += 1
-        if i < n and PRICE_RE.match(lines[i]):
-            price_member = int(PRICE_RE.match(lines[i]).group(1))
-            i += 1
-        if i < n and lines[i] == "for members":
-            i += 1
-
-        if i < n and AVAILABLE_FROM_RE.match(lines[i]):
-            i += 1  # e.g. "Available from 8 - 9 Jul" - note and skip
-
-        if i < n and lines[i] == "View Stay":
-            i += 1
-
-        if price is None:
-            # Didn't match expected shape - bail out of this record so we
-            # don't cascade errors through the rest of the page.
-            continue
-
-        records.append({
-            "competitor": "discovery_jindabyne",
-            "category": category,
-            "name": name,
-            "sleeps": sleeps,
-            "price": price,
-            "price_member": price_member,
-            "available": is_available_section,
-            "scrape_date": scrape_date.isoformat(),
-        })
-
-    return records
+        out[room["code"]] = (rb.get("additionalAdult", 0) / nights,
+                             rb.get("additionalChild", 0) / nights)
+    return out
 
 
-def scrape(page, target_date: date, adults: int, kids: int, infants: int):
-    """
-    `page` is a Playwright page object. Navigates, waits for content,
-    and returns parsed records for the given single-night stay.
-    """
-    depart = date.fromordinal(target_date.toordinal() + 1)
-    url = build_url(target_date, depart, adults, kids, infants)
-
-    page.goto(url, wait_until="networkidle", timeout=30000)
-
-    # Wait for at least one room card to render.
-    try:
-        page.wait_for_selector("text=View Stay", timeout=15000)
-    except Exception:
-        # No rooms rendered (e.g. sold out or page structure changed) -
-        # return empty rather than crashing the whole run.
-        return []
-
-    text = page.inner_text("main")
-    return parse_page_text(text, target_date)
+def collect(fetcher, mapping, plan):
+    wanted = {c["competitors"][PARK]["room_id"] for c in mapping["categories"]
+              if c["competitors"].get(PARK, {}).get("room_id")}
+    probes = extras_probe_nights(plan)
+    rows, extras, seen = [], {}, set()
+    for stay, check_in, nights in plan:
+        base = parse(fetcher.get_json(PARK, config.DISCOVERY_PAGE,
+                                      _url(check_in, nights, config.ADULTS, 0), HEADERS),
+                     check_in, nights, stay)
+        seen |= set(base)
+        rows.extend((code, stay, check_in, nights, r) for code, r in base.items())
+        if stay == "night" and check_in in probes:
+            ex = parse_extras(fetcher.get_json(PARK, config.DISCOVERY_PAGE,
+                                               _url(check_in, nights, 3, 1), HEADERS), nights)
+            for code, v in ex.items():
+                extras.setdefault(code, {})[week_key(check_in)] = v
+    recs = []
+    for code, stay, check_in, nights, r in rows:
+        ea, ec = nearest_week(extras.get(code, {}), week_key(check_in))
+        recs.append(record(PARK, code, r.pop("name"), stay, check_in, nights,
+                           extra_adult=ea, extra_child=ec, **r))
+    missing = wanted - seen
+    if missing:
+        log.warning("discovery: mapped room ids never seen: %s (renamed/removed?)", missing)
+    return recs
