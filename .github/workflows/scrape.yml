@@ -1,5 +1,13 @@
 name: Weekly competitor rates
 
+# Where it runs:
+#   - By default on GitHub's servers. NRMA's firewall blocks those, so NRMA is
+#     skipped there and the report covers KTP vs Discovery.
+#   - Set the repository variable RUNNER to "self-hosted" (Settings -> Secrets
+#     and variables -> Actions -> Variables) once a self-hosted runner on a
+#     KTP / home computer is connected, and NRMA is included automatically.
+#   - PARKS (optional variable) overrides the park list, e.g. "ktp,discovery,nrma".
+
 on:
   schedule:
     # Sunday 20:00 UTC = Monday 6am AEST / 7am AEDT
@@ -23,7 +31,7 @@ concurrency:
 
 jobs:
   rates:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -36,15 +44,19 @@ jobs:
       - name: Install
         run: |
           pip install -r requirements.txt
-          python -m playwright install --with-deps chromium
-          sudo apt-get install -y xvfb > /dev/null
+          if [ "${{ runner.environment }}" = "github-hosted" ] && [ "$RUNNER_OS" = "Linux" ]; then
+            python -m playwright install --with-deps chromium
+            sudo apt-get install -y xvfb > /dev/null
+          else
+            python -m playwright install chromium
+          fi
 
       - name: Unit tests
         run: python -m pytest -q tests
 
       - name: Collect, compare, report
-        id: run
         env:
+          PARKS: ${{ vars.PARKS || (vars.RUNNER && 'ktp,discovery,nrma' || 'ktp,discovery') }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
@@ -52,10 +64,15 @@ jobs:
           REPORT_TO: ${{ secrets.REPORT_TO }}
           REPORT_FROM: ${{ secrets.REPORT_FROM }}
         run: |
-          ARGS="--days ${{ github.event.inputs.days || '120' }}"
+          ARGS="--days ${{ github.event.inputs.days || '120' }} --only $PARKS"
           if [ "${{ github.event.inputs.email }}" = "false" ]; then ARGS="$ARGS --no-email"; fi
-          # virtual display so the fallback browser runs like a normal one
-          xvfb-run -a python run.py $ARGS
+          echo "Parks: $PARKS"
+          # a virtual display (when available) lets the fallback browser run like a normal one
+          if command -v xvfb-run > /dev/null; then
+            xvfb-run -a python run.py $ARGS
+          else
+            python run.py $ARGS
+          fi
 
       - name: Save report as a download
         if: always()
@@ -72,4 +89,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add data reports
           git diff --quiet --cached || git commit -m "Competitor rates $(TZ=Australia/Sydney date +%F)"
+          git pull --rebase -q || true
           git push
