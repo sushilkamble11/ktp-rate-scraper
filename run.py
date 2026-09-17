@@ -96,6 +96,8 @@ def scrape(parks, days, force_browser):
 
 def build_context(snap, prev):
     mapping = load_mapping()
+    # only show the competitors this run actually covered
+    mapping["competitors"] = {k: v for k, v in mapping["competitors"].items() if k in snap["parks"]}
     rows = compare.build_rows(snap["records"], mapping)
     summary, monthly = compare.summarise(rows, mapping)
     prev_records = prev["records"] if prev else []

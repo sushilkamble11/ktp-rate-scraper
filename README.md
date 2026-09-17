@@ -28,7 +28,7 @@ browser for that site.
 | Actions → run → Artifacts | The week's dashboard + CSV as a download (kept 90 days) |
 | `data/snapshots/` | Raw prices for every run (gzip JSON) – used for week-on-week moves |
 
-If a park fails or returns no prices, the run goes **red**, the email subject
+If a park that's meant to be covered fails or returns no prices, the run goes **red**, the email subject
 says **DATA MISSING**, and nothing empty gets saved.
 
 ## One-time setup
@@ -50,6 +50,26 @@ says **DATA MISSING**, and nothing empty gets saved.
    Without these it still runs and saves the report; it just doesn't email.
 3. **Run it once now** – Actions → *Weekly competitor rates* → Run workflow.
    Takes about 15–20 minutes.
+
+## NRMA needs a local computer
+
+NRMA's firewall (Cloudflare) blocks cloud servers, including GitHub's. From an
+ordinary internet connection it works fine. So:
+
+- **Out of the box** the weekly run happens on GitHub and covers **KTP vs
+  Discovery**. NRMA is left out of the report rather than failing every week.
+- **To add NRMA**, connect a computer that's on most of the time (the office
+  PC at the park is ideal) as a *self-hosted runner*:
+  1. Repo → Settings → Actions → Runners → **New self-hosted runner**, pick the
+     computer's OS and run the commands GitHub shows on that computer
+     (finish with `./svc.sh install && ./svc.sh start` on Linux/Mac so it
+     survives restarts). It needs Python 3.10+.
+  2. Settings → Secrets and variables → Actions → **Variables** → add
+     `RUNNER` = `self-hosted`.
+
+  From then on the whole weekly run happens on that computer and NRMA is
+  included automatically. Remove the variable to go back to GitHub's servers.
+- `PARKS` (optional variable) overrides the park list, e.g. `ktp,discovery,nrma`.
 
 ## Changing things
 
