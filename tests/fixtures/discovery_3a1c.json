@@ -1,0 +1,6 @@
+{"result":{"messages":[],"bookingContext":{"parkCode":"NJIN","checkIn":"2026-10-16T00:00:00","checkOut":"2026-10-18T00:00:00","adults":3,"children":1,"infants":0,"restrictions":[]},"deals":[],
+"available":[
+ {"code":"NJIN-49-1822-RT","type":"Cabin","name":"Deluxe 2 Bedroom Cabin - Fireplace","maxGuests":6,"availability":[{"date":"2026-10-16T00:00:00","price":199,"checkoutOnly":false},{"date":"2026-10-17T00:00:00","price":209,"checkoutOnly":false}],"offers":[{"id":"MemberOffer_NJIN-49-1822-RT","templateCode":"MemberOffer","price":{"baseAmount":498,"totalAmount":448.2,"saving":49.8,"rateBreakdown":{"amount":408,"additionalAdult":50,"additionalChild":40}},"cancellationPolicy":{"isRefundable":true}}],"accommodationsAvailable":7},
+ {"code":"NJIN-49-2178-RT","type":"Site","name":"Deluxe Powered Site - 25 Foot","maxGuests":6,"availability":[],"offers":[{"id":"MemberOffer_NJIN-49-2178-RT","templateCode":"MemberOffer","price":{"baseAmount":134,"totalAmount":120.6,"saving":13.4,"rateBreakdown":{"amount":84,"additionalAdult":30,"additionalChild":20}},"cancellationPolicy":{"isRefundable":true}}],"accommodationsAvailable":4}
+],
+"unavailable":[],"isBookingCutOffForDay":false}}
