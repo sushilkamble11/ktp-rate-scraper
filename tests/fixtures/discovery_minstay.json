@@ -1,5 +1,0 @@
-{"result":{"messages":[{"type":"Info","message":"A minimum of 3 nights stay is required. Please adjust your stay dates."}],"bookingContext":{"parkCode":"NJIN","checkIn":"2026-12-18T00:00:00","checkOut":"2026-12-19T00:00:00","adults":2,"children":0,"infants":0,"restrictions":[]},"deals":[],"available":[],
-"unavailable":[
- {"code":"NJIN-49-530-RT","type":"Cabin","name":"Deluxe 2 Bedroom Cabin - Sleeps 6","maxGuests":6,"availability":[{"date":"2026-12-18T00:00:00+00:00","price":264,"checkoutOnly":false,"isAvailable":true}],"offers":[],"minNightsStay":3,"accommodationsAvailable":5},
- {"code":"NJIN-49-534-RT","type":"Cabin","name":"Deluxe 2 Bedroom Cabin - Sleeps 5","maxGuests":5,"availability":[{"date":"2026-12-18T00:00:00+00:00","price":0,"checkoutOnly":false,"isAvailable":false}],"offers":[],"accommodationsAvailable":0}
-],"isBookingCutOffForDay":false}}
