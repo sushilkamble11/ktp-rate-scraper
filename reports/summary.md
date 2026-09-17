@@ -4,14 +4,14 @@
 
 | Category | Discovery weeknights | Discovery weekends | NRMA weeknights | NRMA weekends |
 |---|---|---|---|---|
-| 2BR Chalet Upgraded | +10% ($219 vs $200) | -6% ($216 vs $230) | – | – |
-| 2BR Chalet | -12% ($161 vs $182) | -26% ($158 vs $214) | – | – |
+| 2BR Chalet Upgraded | +35% ($229 vs $170) | +54% ($269 vs $175) | – | – |
+| 2BR Chalet | +11% ($169 vs $152) | +27% ($199 vs $157) | – | – |
 | 3BR Chalet | no equivalent |  | no equivalent |  |
-| Cedar Cabin | +16% ($116 vs $100) | ±0% ($119 vs $118) | – | – |
-| Powered Caravan Site | +34% ($53 vs $39) | +25% ($56 vs $45) | – | – |
-| Powered Camper Trailer Site | +7% ($43 vs $40) | -3% ($45 vs $47) | – | – |
-| Powered Motorhome Site | -12% ($35 vs $40) | -10% ($42 vs $47) | – | – |
-| Unpowered Tent Site | +4% ($32 vs $31) | -1% ($37 vs $38) | – | – |
+| Cedar Cabin | +45% ($129 vs $89) | +42% ($149 vs $105) | – | – |
+| Powered Caravan Site | +80% ($55 vs $31) | +55% ($65 vs $42) | – | – |
+| Powered Camper Trailer Site | +28% ($39 vs $31) | +17% ($49 vs $42) | – | – |
+| Powered Motorhome Site | +5% ($32 vs $31) | -7% ($39 vs $42) | – | – |
+| Unpowered Tent Site | +48% ($32 vs $22) | +19% ($39 vs $33) | – | – |
 
-Records: ktp 1046, discovery 2695
+Records: ktp 32, discovery 80
 Competitor price moves since last run: 0
