@@ -52,6 +52,10 @@ def test_nrma_range_member_ratio_and_units():
     assert ns["2026-12-18"]["status"] == "sold out"
 
 
+def test_nrma_member_cap():
+    assert nrma.member(180) == 162 and nrma.member(755) == 695 and nrma.member(None) is None
+
+
 def test_nrma_rates_loaded_but_not_bookable():
     data = load("nrma_range.json")
     for a in data["Accommodation"]:
