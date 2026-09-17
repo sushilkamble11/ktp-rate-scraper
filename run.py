@@ -149,6 +149,7 @@ def main():
     ap.add_argument("--rebuild", action="store_true")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)   # one line per request is too noisy
 
     if args.rebuild:
         snap = read_snapshot(os.path.join(config.DATA_DIR, "latest.json"))
