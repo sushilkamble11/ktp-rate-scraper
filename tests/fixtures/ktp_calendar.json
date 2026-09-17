@@ -1,0 +1,6 @@
+{"result":[
+ {"date":"2026-12-17T00:00:00.000Z","price":199,"canCheckIn":true,"totalAvailability":5},
+ {"date":"2026-12-18T00:00:00.000Z","price":0,"canCheckIn":true,"totalAvailability":0,"availabilityConstraint":"min-stay-constraint","constraintStayDays":2,"checkOutConstraint":{"minStay":2}},
+ {"date":"2026-11-25T00:00:00.000Z","price":0,"canCheckIn":false,"totalAvailability":0,"availabilityConstraint":"sold-out-constraint"},
+ {"date":"2027-07-01T00:00:00.000Z","price":0,"canCheckIn":false,"totalAvailability":0,"availabilityConstraint":"stop-sell-constraint"}
+]}

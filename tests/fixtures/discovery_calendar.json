@@ -1,0 +1,6 @@
+{"result":{"messages":[],"available":[
+  {"code":"NJIN-49-530-RT","name":"Deluxe 2 Bedroom Cabin - Sleeps 6","availability":[
+    {"date":"2026-12-17T00:00:00","price":200},{"date":"2026-12-18T00:00:00","price":600}]}],
+ "unavailable":[
+  {"code":"NJIN-49-1822-RT","name":"Deluxe 2 Bedroom Cabin - Fireplace","availability":[
+    {"date":"2026-12-17T00:00:00+00:00","price":220,"isAvailable":false},{"date":"2026-12-18T00:00:00+00:00","price":0}]}]}}

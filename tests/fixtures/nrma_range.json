@@ -1,0 +1,71 @@
+{
+ "Accommodation": [
+  {
+   "Id": 2,
+   "Name": "Lake View Villa",
+   "Availability": {
+    "2026-12-17": 2,
+    "2026-12-18": 0
+   },
+   "Pricing": [
+    {
+     "Label": "Standard Rate",
+     "Code": 0,
+     "Total": 400,
+     "MemberTotal": 360,
+     "RatePerDay": [
+      {
+       "2026-12-17": {
+        "Id": "1",
+        "Amount": 180
+       }
+      },
+      {
+       "2026-12-18": {
+        "Id": "1",
+        "Amount": 220
+       }
+      }
+     ]
+    },
+    {
+     "Label": "Weekly Special",
+     "Code": 6,
+     "Total": 400,
+     "MemberTotal": 380,
+     "RatePerDay": []
+    }
+   ]
+  },
+  {
+   "Id": 7,
+   "Name": "Powered Sites",
+   "Availability": {
+    "2026-12-17": 40,
+    "2026-12-18": 35
+   },
+   "Pricing": [
+    {
+     "Label": "Standard Rate",
+     "Code": 0,
+     "Total": 100,
+     "MemberTotal": 90,
+     "RatePerDay": [
+      {
+       "2026-12-17": {
+        "Id": "2",
+        "Amount": 50
+       }
+      },
+      {
+       "2026-12-18": {
+        "Id": "2",
+        "Amount": 50
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
