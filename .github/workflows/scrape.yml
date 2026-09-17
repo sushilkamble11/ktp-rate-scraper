@@ -37,6 +37,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
+          sudo apt-get install -y xvfb > /dev/null
 
       - name: Unit tests
         run: python -m pytest -q tests
@@ -53,7 +54,8 @@ jobs:
         run: |
           ARGS="--days ${{ github.event.inputs.days || '120' }}"
           if [ "${{ github.event.inputs.email }}" = "false" ]; then ARGS="$ARGS --no-email"; fi
-          python run.py $ARGS
+          # virtual display so the fallback browser runs like a normal one
+          xvfb-run -a python run.py $ARGS
 
       - name: Save report as a download
         if: always()
