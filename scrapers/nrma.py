@@ -5,33 +5,31 @@ GET {BASE}/api/accommodation/get-availability-pricing/
     ?from=..&to=..&promoCode=&adults=..&children=..&infants=0&pets=0&parkName=..
 with header x-nb-api-key - exactly what their book-now page sends.
 
-Returns every category with its rate plans. We use the "Standard Rate"
-(flexible) plan: Total = public price, MemberTotal = My NRMA member price.
-Plan Code: 0 = bookable, 6 = stay rule not met (min nights), 3 = too many guests.
-StayThrough=false with Code 0 means sold out on at least one night.
+A date range (up to ~3 months) returns, per category, the "Standard Rate"
+(flexible) plan with a price for every night (RatePerDay) plus Total and
+MemberTotal (My NRMA 10% off), and units available per night.
+NRMA loads prices further out than it takes bookings: nights after the last
+bookable night are marked "not bookable" but their rates are kept.
 
-Extras: NRMA doesn't itemise them, so we price the same stay at 3 adults and
-at 2 adults + 1 child and take the difference - on one weeknight a week,
-applied to that week.
+Extras: NRMA doesn't itemise them, so one weeknight a month is priced at
+3 adults and at 2 adults + 1 child and compared with 2 adults.
 """
 
 import logging
-from datetime import timedelta
+from datetime import date, timedelta
 from urllib.parse import quote_plus
 
 import config
-from .common import extras_probe_nights, nearest_week, record, week_key
+from .common import chunks, extra, first_weeknights, night
 
 log = logging.getLogger(__name__)
 PARK = "nrma"
 HEADERS = {"x-nb-api-key": config.NRMA_API_KEY}
-CODE_NOTES = {3: "too many guests", 6: "min stay not met"}
 
 
-def _url(check_in, nights, adults, children):
-    to = check_in + timedelta(days=nights)
+def _url(frm, to_excl, adults, children):
     return (f"{config.NRMA_BASE}/api/accommodation/get-availability-pricing/"
-            f"?from={check_in.isoformat()}&to={to.isoformat()}&promoCode="
+            f"?from={frm.isoformat()}&to={to_excl.isoformat()}&promoCode="
             f"&adults={adults}&children={children}&infants=0&pets=0"
             f"&parkName={quote_plus(config.NRMA_PARK_NAME)}")
 
@@ -44,65 +42,79 @@ def _standard(acc):
     return plans[0] if plans else None
 
 
-def parse(payload):
-    """-> {room_id: dict(name, price, rack, bookable, note, units_left)}"""
-    out = {}
-    for acc in (payload or {}).get("Accommodation") or []:
+def parse_range(payload):
+    """-> list of night records for the range."""
+    accs = (payload or {}).get("Accommodation") or []
+    # NRMA loads rates before it opens them for booking. Nights after the last
+    # night anything at all can be booked are "not bookable yet" (rate kept).
+    bookable = [d for a in accs for d, v in (a.get("Availability") or {}).items() if v]
+    last_bookable = max(bookable) if bookable else ""
+    out = []
+    for acc in accs:
         p = _standard(acc)
         if not p:
             continue
-        code = int(p.get("Code") or 0)
-        stay_ok = bool(acc.get("StayThrough"))
-        units = acc.get("SitesAvailable")
-        if code == 0 and stay_ok:
-            note = ""
-        elif code in CODE_NOTES:
-            note = CODE_NOTES[code]
-        else:
-            note = "sold out"
-        total = p.get("Total")
-        member = p.get("MemberTotal")
-        out[str(acc["Id"])] = dict(
-            name=acc.get("Name", ""),
-            price=member if member else total,
-            rack=total,
-            bookable=(code == 0 and stay_ok),
-            note=note,
-            units_left=units,
-            estimated=False,
-        )
+        per_day = {}
+        for item in p.get("RatePerDay") or []:
+            for d, v in item.items():
+                per_day[d] = float(v.get("Amount") or 0)
+        total, mem = float(p.get("Total") or 0), float(p.get("MemberTotal") or 0)
+        ratio = mem / total if total and mem else 1.0
+        units = acc.get("Availability") or {}
+        for d, amt in sorted(per_day.items()):
+            u = units.get(d)
+            if not amt:
+                st = "not open"
+            elif d > last_bookable:
+                st = "not bookable"
+            elif u == 0:
+                st = "sold out"
+            else:
+                st = "open"
+            out.append(night(PARK, acc["Id"], acc.get("Name", ""), date.fromisoformat(d),
+                             rate=amt * ratio if amt else None, rack=amt or None,
+                             units=u, status=st))
     return out
 
 
 def totals(payload):
-    return {k: v["rack"] for k, v in parse(payload).items()}
+    out = {}
+    for acc in (payload or {}).get("Accommodation") or []:
+        p = _standard(acc)
+        if p and p.get("Total") is not None:
+            out[str(acc["Id"])] = float(p["Total"])
+    return out
 
 
-def collect(fetcher, mapping, plan):
+def collect(fetcher, mapping, start: date, end: date):
+    get = lambda url: fetcher.get_json(PARK, config.NRMA_PAGE, url, HEADERS)
+    nights = []
+    for frm, to in chunks(start, end, config.NRMA_RANGE_DAYS):
+        got = parse_range(get(_url(frm, to + timedelta(days=1), config.ADULTS, 0)))
+        nights.extend(got)
+        if not got and frm > start + timedelta(days=300):
+            # A range that runs past NRMA's last loaded night comes back empty,
+            # so pick up the tail a week at a time, then stop.
+            for wf, wt in chunks(frm, to, 7):
+                part = parse_range(get(_url(wf, wt + timedelta(days=1), config.ADULTS, 0)))
+                if not part:
+                    break
+                nights.extend(part)
+            break
     wanted = {c["competitors"][PARK]["room_id"] for c in mapping["categories"]
               if c["competitors"].get(PARK, {}).get("room_id")}
-    probes = extras_probe_nights(plan)
-    rows, extras, seen = [], {}, set()
-    for stay, check_in, nights in plan:
-        get = lambda a, c: fetcher.get_json(PARK, config.NRMA_PAGE,
-                                            _url(check_in, nights, a, c), HEADERS)
-        base = parse(get(config.ADULTS, 0))
-        seen |= set(base)
-        rows.extend((rid, stay, check_in, nights, r) for rid, r in base.items())
-        if stay == "night" and check_in in probes:
-            plus_a, plus_c = totals(get(3, 0)), totals(get(2, 1))
-            for rid, r in base.items():
-                if r["rack"] is None:
-                    continue
-                ea = plus_a[rid] - r["rack"] if plus_a.get(rid) is not None else None
-                ec = plus_c[rid] - r["rack"] if plus_c.get(rid) is not None else None
-                extras.setdefault(rid, {})[week_key(check_in)] = (ea, ec)
-    recs = []
-    for rid, stay, check_in, nights, r in rows:
-        ea, ec = nearest_week(extras.get(rid, {}), week_key(check_in))
-        recs.append(record(PARK, rid, r.pop("name"), stay, check_in, nights,
-                           extra_adult=ea, extra_child=ec, **r))
-    missing = wanted - seen
-    if missing:
-        log.warning("nrma: mapped room ids never seen: %s (renamed/removed?)", missing)
-    return recs
+    open_days = sorted({date.fromisoformat(n["date"]) for n in nights
+                        if n["status"] == "open" and n["room_id"] in wanted})
+    extras = []
+    for month, d in first_weeknights(open_days).items():
+        nxt = d + timedelta(days=1)
+        base, pa, pc = (totals(get(_url(d, nxt, a, c))) for a, c in ((2, 0), (3, 0), (2, 1)))
+        for rid, b in base.items():
+            extras.append(extra(PARK, rid, month,
+                                pa[rid] - b if rid in pa else None,
+                                pc[rid] - b if rid in pc else None))
+    seen = {n["room_id"] for n in nights}
+    if wanted - seen:
+        log.warning("nrma: mapped room ids not found: %s (renamed/removed?)", wanted - seen)
+    log.info("nrma: %d nights, open to %s", len(nights), open_days[-1] if open_days else "-")
+    return nights, extras
