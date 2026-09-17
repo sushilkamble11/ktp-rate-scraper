@@ -1,39 +1,42 @@
 """
-Configuration for the KTP competitor rate scraper.
-Edit the values below to suit — nothing here needs code changes elsewhere.
+Settings for the KTP competitor rate check. Everything tunable lives here.
+Category mapping lives in mapping.json.
 """
 
-from datetime import date, timedelta
+# --- What to price ------------------------------------------------------------
+DAYS_AHEAD = 120          # rolling window of check-in dates, starting tomorrow
+ADULTS = 2                # base occupancy every park prices at
+# Every night is priced as a 1-night stay (2 adults), plus every Friday as a
+# Fri->Sun 2-night stay, so weekends with a 2-night minimum still get a price.
 
-# --- Date range to scan ---------------------------------------------------
-DAYS_AHEAD = 90              # rolling window, starting tomorrow
-START_DATE = date.today() + timedelta(days=1)
-END_DATE = START_DATE + timedelta(days=DAYS_AHEAD)
+# --- How close counts as "in line" --------------------------------------------
+IN_LINE_BAND_PCT = 5      # KTP within +/-5% of the competitor = in line
 
-# --- Politeness / stability ------------------------------------------------
-DELAY_BETWEEN_REQUESTS_SECONDS = 2.5   # pause between each page load
-PAGE_TIMEOUT_MS = 30000                 # how long to wait for a page to load
-HEADLESS = True                         # set False to watch the browser work
+# --- Week-on-week alerts -------------------------------------------------------
+MOVE_MIN_DOLLARS = 10     # flag competitor price moves of at least $10 ...
+MOVE_MIN_PCT = 10         # ... and at least 10%
 
-# --- Search params ----------------------------------------------------------
-ADULTS = 2
-CHILDREN = 0
-INFANTS = 0
+# --- Politeness / reliability --------------------------------------------------
+DELAY_SECONDS = 1.0       # pause between requests to the same site
+TIMEOUT_SECONDS = 30
+RETRIES = 3
 
-# --- Your own KTP rates, for the dashboard comparison -----------------------
-# Fill these in / keep updated. Used only for display in dashboard.html.
-# Values are indicative nightly rates in AUD — adjust to match your current
-# published rate for each category (e.g. your peak-season Fri/Sat rate).
-KTP_RATES = {
-    "unpowered": None,       # e.g. 55
-    "powered": None,         # e.g. 65
-    "2br_chalet": None,      # e.g. 320
-    "2br_upgraded": None,    # e.g. 380
-    "3br_chalet": None,      # e.g. 450
-    "cedar": None,           # e.g. 250
-}
+# --- Sites ---------------------------------------------------------------------
+KTP_CHANNEL = "kosciuszkotouristpark-1"            # SiteMinder booking engine
+KTP_BASE = "https://book-directonline.com"
+KTP_RANGE_MAX_DAYS = 90                            # engine caps a range at ~92 days
 
-# --- Output locations --------------------------------------------------------
-# Lives under docs/ so GitHub Pages can serve the dashboard + data directly.
-HISTORY_DIR = "docs/history"
-LATEST_FILE = "docs/history/latest.json"
+DISCOVERY_PARK_CODE = "NJIN"
+DISCOVERY_API = "https://exp-api.gdaygroup.com.au/api/v1"
+DISCOVERY_PAGE = "https://www.discoveryholidayparks.com.au/caravan-parks/new-south-wales/snowy-mountains/jindabyne"
+DISCOVERY_CALLER = "DhpWeb"                        # header their own site sends
+
+NRMA_BASE = "https://www.nrmaparksandresorts.com.au"
+NRMA_PAGE = "https://www.nrmaparksandresorts.com.au/jindabyne/book-now/"
+NRMA_PARK_NAME = "NRMA Jindabyne Holiday Park"
+NRMA_API_KEY = "instances_efa54796e4116207d567ad259e53a819"  # public key their site sends
+
+# --- Output ----------------------------------------------------------------------
+DATA_DIR = "data"
+SNAPSHOT_DIR = "data/snapshots"
+REPORT_DIR = "reports"

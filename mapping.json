@@ -1,47 +1,117 @@
 {
-  "ktp_categories": {
-    "unpowered": "Unpowered Site",
-    "powered": "Powered Site (Caravan/Camper Trailer/Motorhome/Overflow combined)",
-    "2br_chalet": "2BR Chalet",
-    "2br_upgraded": "2BR Upgraded Chalet",
-    "3br_chalet": "3BR Chalet",
-    "cedar": "Cedar Cabin"
-  },
+  "_readme": "Like-for-like mapping. match: exact = same bedrooms, sleeps and style; close = same kind of product with a named difference; none = no real equivalent (shown for reference only, left out of the competitive score). Room ids come from each park's booking system and do not change when they rename a room.",
 
-  "_comment_3br_and_cedar": "3br_chalet and cedar are soft/unconfirmed mappings below. See README.md.",
-
-  "nrma_jindabyne": {
-    "url": "https://www.nrmaparksandresorts.com.au/jindabyne/book-now/",
-    "categories": {
-      "unpowered": ["Unpowered Sites"],
-      "powered": ["Powered Sites - Pet Friendly"],
-      "2br_chalet": ["Lake View Villa - Access"],
-      "2br_upgraded": ["Lake View Villa"],
-      "3br_chalet": [],
-      "cedar": []
+  "competitors": {
+    "discovery": {
+      "label": "Discovery Parks Jindabyne",
+      "short": "Discovery",
+      "price_basis": "Discovery Club member rate (10% off, capped at $50 a booking)"
+    },
+    "nrma": {
+      "label": "NRMA Jindabyne Holiday Park",
+      "short": "NRMA",
+      "price_basis": "My NRMA member rate on the Standard (flexible) rate (10% off)"
     }
   },
 
-  "discovery_jindabyne": {
-    "url": "https://www.discoveryholidayparks.com.au/caravan-parks/new-south-wales/snowy-mountains/jindabyne",
-    "categories": {
-      "unpowered": ["Unpowered Site - Tent", "Unpowered Site - Campervan"],
-      "powered": [
-        "Powered Grass Site - Tent",
-        "Powered Sites - 17 Foot",
-        "Powered Slab Site - 21 Foot",
-        "Powered Paved Site - 25 Foot",
-        "Deluxe Powered Site - 25 Foot"
-      ],
-      "2br_chalet": ["Standard 2 Bedroom Cabin"],
-      "2br_upgraded": [
-        "Superior 2 Bedroom Cabin",
-        "Superior 2 Bedroom Spa Cabin - Sleeps 5",
-        "Superior 2 Bedroom Spa Cabin - Sleeps 6",
-        "Superior 2 Bedroom Cabin - Fireplace"
-      ],
-      "3br_chalet": ["Deluxe 2 Bedroom Cabin - Fireplace"],
-      "cedar": []
+  "ktp_price_basis": "Lowest public price on the KTP direct booking engine for that stay",
+
+  "categories": [
+    {
+      "key": "2br_upgraded",
+      "label": "2BR Chalet Upgraded",
+      "ktp_room_id": "263658",
+      "ktp_spec": "2 bedrooms, sleeps 6 (queen + 2 sets of bunks), ensuite, electric fireplace, underfloor-heated shower",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-1822-RT", "name": "Deluxe 2 Bedroom Cabin - Fireplace", "match": "exact",
+                      "note": "Sleeps 6, queen + 2 sets of bunks, fireplace"},
+        "nrma": {"room_id": "2", "name": "Lake View Villa", "match": "close",
+                 "note": "2BR sleeps 6, lake view, no fireplace - NRMA's top 2BR"}
+      }
+    },
+    {
+      "key": "2br",
+      "label": "2BR Chalet",
+      "ktp_room_id": "263657",
+      "ktp_spec": "2 bedrooms, sleeps 6 (queen + 2 double bunks), one bathroom",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-530-RT", "name": "Deluxe 2 Bedroom Cabin - Sleeps 6", "match": "exact",
+                      "note": "Sleeps 6, queen + double bunks"},
+        "nrma": {"room_id": "2", "name": "Lake View Villa", "match": "close",
+                 "note": "2BR sleeps 6 (double + 2 single bunks), lake view"}
+      }
+    },
+    {
+      "key": "3br",
+      "label": "3BR Chalet",
+      "ktp_room_id": "263656",
+      "ktp_spec": "3 bedrooms, sleeps 8, 2 bathrooms incl. spa",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-1822-RT", "name": "Deluxe 2 Bedroom Cabin - Fireplace", "match": "none",
+                      "note": "No 3-bedroom product. Largest 2BR shown for reference only"},
+        "nrma": {"room_id": "2", "name": "Lake View Villa", "match": "none",
+                 "note": "No 3-bedroom product. Largest 2BR shown for reference only"}
+      }
+    },
+    {
+      "key": "cedar",
+      "label": "Cedar Cabin",
+      "ktp_room_id": "263654",
+      "ktp_spec": "Sleeps 6, no private bathroom (amenities next door), kitchen, bed linen only",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-539-RT", "name": "Economy Studio Cabin (No Bathroom)", "match": "close",
+                      "note": "No bathroom, but a studio that sleeps 4"},
+        "nrma": {"room_id": "5", "name": "Cabin No Ensuite", "match": "exact",
+                 "note": "No ensuite, kitchenette, sleeps 5"}
+      }
+    },
+    {
+      "key": "caravan",
+      "label": "Powered Caravan Site",
+      "ktp_room_id": "263653",
+      "ktp_spec": "Powered, drive-through, spacious",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-541-RT", "name": "Powered Paved Site - 25 Foot", "match": "close",
+                      "note": "Powered 25ft paved site"},
+        "nrma": {"room_id": "7", "name": "Powered Sites", "match": "close",
+                 "note": "NRMA sells one powered site type"}
+      }
+    },
+    {
+      "key": "camper",
+      "label": "Powered Camper Trailer Site",
+      "ktp_room_id": "263652",
+      "ktp_spec": "Powered, reverse-in, campfire when permitted",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-1735-RT", "name": "Powered Sites - 17 Foot", "match": "close",
+                      "note": "Standard powered site"},
+        "nrma": {"room_id": "7", "name": "Powered Sites", "match": "close",
+                 "note": "NRMA sells one powered site type"}
+      }
+    },
+    {
+      "key": "motorhome",
+      "label": "Powered Motorhome Site",
+      "ktp_room_id": "263655",
+      "ktp_spec": "Powered, small vans and motorhomes, no awnings",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-1735-RT", "name": "Powered Sites - 17 Foot", "match": "close",
+                      "note": "Standard powered site"},
+        "nrma": {"room_id": "7", "name": "Powered Sites", "match": "close",
+                 "note": "NRMA sells one powered site type"}
+      }
+    },
+    {
+      "key": "unpowered",
+      "label": "Unpowered Tent Site",
+      "ktp_room_id": "263659",
+      "ktp_spec": "Unpowered, tents, up to 6 people",
+      "competitors": {
+        "discovery": {"room_id": "NJIN-49-542-RT", "name": "Unpowered Site - Tent", "match": "exact",
+                      "note": "Unpowered tent site"},
+        "nrma": {"room_id": "8", "name": "Unpowered Sites", "match": "exact",
+                 "note": "Unpowered grass site"}
+      }
     }
-  }
+  ]
 }
