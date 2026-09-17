@@ -14,9 +14,9 @@ on:
     - cron: '0 20 * * 0'
   workflow_dispatch:
     inputs:
-      days:
-        description: 'Days ahead to price'
-        default: '120'
+      end:
+        description: 'Collect rates up to (YYYY-MM-DD)'
+        default: '2028-12-31'
       email:
         description: 'Send the email'
         type: boolean
@@ -64,7 +64,7 @@ jobs:
           REPORT_TO: ${{ secrets.REPORT_TO }}
           REPORT_FROM: ${{ secrets.REPORT_FROM }}
         run: |
-          ARGS="--days ${{ github.event.inputs.days || '120' }} --only $PARKS"
+          ARGS="--end ${{ github.event.inputs.end || '2028-12-31' }} --only $PARKS"
           if [ "${{ github.event.inputs.email }}" = "false" ]; then ARGS="$ARGS --no-email"; fi
           echo "Parks: $PARKS"
           # a virtual display (when available) lets the fallback browser run like a normal one
