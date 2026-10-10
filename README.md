@@ -1,5 +1,7 @@
 # KTP Rate Desk
 
+Proprietary software owned by Mysnowshop.
+
 Every Monday morning this reads the nightly rates of **Kosciuszko Tourist Park**,
 **Discovery Parks Jindabyne** and **NRMA Jindabyne Holiday Park** out to
 **December 2028**, lines each KTP category up against the closest like-for-like
@@ -26,7 +28,7 @@ Parks only load rates so far ahead – later months fill in as they open them.
 
 | Where | What |
 |---|---|
-| Rate Desk page (claude.ai) | The dashboard: what to change, opening-rate guide, month-by-month heatmap, extras, moves |
+| Rate Desk dashboard | What to change, opening-rate guide, month-by-month heatmap, extras and moves |
 | Email | Top raise / lower suggestions and competitor moves, dashboard + CSV attached |
 | `reports/latest.html` | Same dashboard as a file – open in a browser |
 | `reports/latest.csv` | Every night × category, for Excel |
