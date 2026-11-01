@@ -1,11 +1,11 @@
-## KTP Rate Desk – 26 Oct 2026
+## KTP Rate Desk – 2 Nov 2026
 
 > **Missing data:** ktp: no prices returned
 
 | Park | Rates loaded to | Taking bookings to |
 |---|---|---|
 | KTP | – | – |
-| Discovery | 24 Oct 2027 | 24 Oct 2027 |
+| Discovery | 28 Oct 2027 | 28 Oct 2027 |
 
 ### Room to raise
 
@@ -15,5 +15,5 @@
 
 - nothing
 
-Nightly records: discovery 4244
-Competitor price moves since last run: 9
+Nightly records: discovery 4195
+Competitor price moves since last run: 5
